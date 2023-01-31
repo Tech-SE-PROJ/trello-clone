@@ -9,3 +9,7 @@
 7. Use .NET Blazor/Razor pages (C#).
 8. Use SQL Server DB.
 9. Email notifications on possible events?
+10. Login feature/system.
+11. Create a new board.
+12. Delete cards/events.
+13. Delete boards.
