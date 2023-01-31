@@ -13,3 +13,6 @@
 11. Create a new board.
 12. Delete cards/events.
 13. Delete boards.
+---------
+14. Title a board.
+15. Create a panel for titling a board/Assigning team members.
