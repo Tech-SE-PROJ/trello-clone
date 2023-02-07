@@ -14,7 +14,7 @@ jobs:
       with:
         dotnet-version: 7.0.x
     - name: Publish with dotnet
-      run: dotnet publish Server/trello-clone.Server.csproj --configuration Release --output build
+      run: dotnet publish trello-clone/Server/trello-clone.Server.csproj --configuration Release --output build
     - name: Deploy to Github Pages
       uses: JamesIves/github-pages-deploy-action@releases/v3
       with:
