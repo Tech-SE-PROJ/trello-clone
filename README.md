@@ -1,7 +1,7 @@
 # trello-clone
 1. Shall create a Trello like website that serves some of the purposes of Trello but for our SE class.
 
-2. Shall have a feature that shows a list of team members. - Shan
+2. Shall have a feature that shows a list of team members. - Shan 3 weeks
 
 3. Shall have a calendar for tracking goals. - Abraham ? 3 weeks 
 
