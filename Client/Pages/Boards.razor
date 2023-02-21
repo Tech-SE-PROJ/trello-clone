@@ -1,0 +1,46 @@
+﻿@page "/boards"
+@using trello_clone.Shared.Classes
+@inject HttpClient Http
+
+
+<PageTitle>Boards</PageTitle>
+
+<h1>Boards</h1>
+
+<button class="btn btn-primary" @onclick="AddBoard">Add Board</button>
+
+<body>
+    @if (boards == null)
+    {
+        <p><em>... loading</em></p>
+    }
+    else
+    {
+        @foreach (var board in boards)
+        {
+            <p>@board.Name</p>
+        }
+    
+    }
+</body>
+
+@code {
+    private IEnumerable<Board>? boards;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetBoards();
+    }
+
+    private async Task GetBoards()
+    {
+        boards = await Http.GetFromJsonAsync<Board[]>("Boards/List");
+    }
+
+    private async Task AddBoard()
+    {
+        await Http.GetFromJsonAsync<Board[]>("Boards/AddBoard");
+
+        await GetBoards();
+    }
+}
