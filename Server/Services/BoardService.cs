@@ -44,14 +44,24 @@ namespace trello_clone.Server.Services
             return new Board();
         }
 
-        public void AddBoard(string boardName = "New Board", bool addBasicColumns = true)
+        public void AddBoard(string boardName, bool addBasicColumns = true)
         {
-            var boardId = new Guid();
+            var boardId = Guid.NewGuid();
             string queary = $"insert into boards (boardId, boardName) values ({boardId},{boardName})";
-            SqlCommand cmd = new SqlCommand(queary, _con);
-            
+
             _con.Open();
-            cmd.ExecuteNonQuery();
+            using (SqlTransaction trans = _con.BeginTransaction())
+            {
+                using (SqlCommand cmd = _con.CreateCommand())
+                {
+                    cmd.Transaction = trans;
+                    cmd.CommandText = @"insert into boards (boardId, boardName) values (@boardId, @boardName);";
+                    cmd.Parameters.AddWithValue("@boardId", boardId);
+                    cmd.Parameters.AddWithValue("@boardName", boardName);
+                    cmd.ExecuteNonQuery();
+                    trans.Commit();
+                }
+            }
             _con.Close();
 
             if (addBasicColumns) _columnService.AddBasicColumns(boardId);

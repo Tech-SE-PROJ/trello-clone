@@ -11,24 +11,24 @@ namespace trello_clone.Server.Services
         {
             var columns = new List<Column>();
             
-            string query = $"Select * from board_columns where boardId={boardId}";
-            SqlCommand cmd = new SqlCommand(query, _con);
-            _con.Open();
-            SqlDataReader dr = cmd.ExecuteReader();
+            //string query = $"Select * from board_columns where boardId={boardId}";
+            //SqlCommand cmd = new SqlCommand(query, _con);
+            //_con.Open();
+            //SqlDataReader dr = cmd.ExecuteReader();
 
-            while (dr.Read()) 
-            {
-                var column = new Column();
+            //while (dr.Read()) 
+            //{
+            //    var column = new Column();
 
-                column.Id = Convert.ToInt32(dr["columnId"]);
-                column.Name = dr["columnName"].ToString();
-                column.Index = Convert.ToInt32(dr["columnIndex"]);
-                column.BoardId = boardId;
+            //    column.Id = Convert.ToInt32(dr["columnId"]);
+            //    column.Name = dr["columnName"].ToString();
+            //    column.Index = Convert.ToInt32(dr["columnIndex"]);
+            //    column.BoardId = boardId;
 
-                columns.Add(column);
-            }
+            //    columns.Add(column);
+            //}
             
-            _con.Close();
+            //_con.Close();
             return columns;
         }
         public Column GetColumn()
@@ -49,9 +49,27 @@ namespace trello_clone.Server.Services
 
             string query = $"insert into board_columns (columnName, columnIndex, boardId) values ({boardId},{columnNames[0]},{0}), ({boardId},{columnNames[1]},{1}), ({boardId},{columnNames[2]},{2})";
 
-            SqlCommand cmd = new SqlCommand(query, _con);
             _con.Open();
-            cmd.ExecuteNonQuery();
+            using (SqlTransaction trans = _con.BeginTransaction())
+            {
+                using (SqlCommand cmd = _con.CreateCommand())
+                {
+                    cmd.Transaction = trans;
+                    cmd.CommandText = @"insert into board_columns (columnName, columnIndex, boardId) values (@columnName1, @columnIndex1, @boardId), (@columnName2, @columnIndex2, @boardId), (@columnName3, @columnIndex3, @boardId);";
+                    cmd.Parameters.AddWithValue("@columnName1", "Planning");
+                    cmd.Parameters.AddWithValue("@columnIndex1", 0);
+                    
+                    cmd.Parameters.AddWithValue("@columnName2", "In-Work");
+                    cmd.Parameters.AddWithValue("@columnIndex2", 1);
+                    
+                    cmd.Parameters.AddWithValue("@columnName3", "Completed");
+                    cmd.Parameters.AddWithValue("@columnIndex3", 2);
+
+                    cmd.Parameters.AddWithValue("boardId", boardId);
+                    cmd.ExecuteNonQuery();
+                    trans.Commit();
+                }
+            }
             _con.Close();
         }
         public void UpdateColumn()

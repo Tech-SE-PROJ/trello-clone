@@ -7,7 +7,10 @@
 
 <h1>Boards</h1>
 
-<button class="btn btn-primary" @onclick="AddBoard">Add Board</button>
+<EditForm class="form-check-inline my-2" Model="newBoardName" OnValidSubmit="() => AddBoard(newBoardName)">
+    <InputText class="form-control mx-2" @bind-Value="newBoardName" />
+    <button class="btn btn-outline-primary" type="submit">Add Board</button>
+</EditForm>
 
 <body>
     @if (boards == null)
@@ -26,6 +29,7 @@
 
 @code {
     private IEnumerable<Board>? boards;
+    private string newBoardName = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -37,10 +41,9 @@
         boards = await Http.GetFromJsonAsync<Board[]>("Boards/List");
     }
 
-    private async Task AddBoard()
+    private async Task AddBoard(string boardName)
     {
-        await Http.GetFromJsonAsync<Board[]>("Boards/AddBoard");
-
+        await Http.GetAsync($"Boards/Addboard/{boardName}");
         await GetBoards();
     }
 }
