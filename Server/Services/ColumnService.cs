@@ -10,25 +10,27 @@ namespace trello_clone.Server.Services
         public ICollection<Column> GetColumns(Guid boardId)
         {
             var columns = new List<Column>();
-            
-            //string query = $"Select * from board_columns where boardId={boardId}";
-            //SqlCommand cmd = new SqlCommand(query, _con);
-            //_con.Open();
-            //SqlDataReader dr = cmd.ExecuteReader();
 
-            //while (dr.Read()) 
-            //{
-            //    var column = new Column();
+            _con.Open();
+            SqlCommand cmd = _con.CreateCommand();
+            cmd.CommandText = @"Select * from board_columns where boardId = @boardId order by columnIndex";
+            cmd.Parameters.AddWithValue("@boardId", boardId);
 
-            //    column.Id = Convert.ToInt32(dr["columnId"]);
-            //    column.Name = dr["columnName"].ToString();
-            //    column.Index = Convert.ToInt32(dr["columnIndex"]);
-            //    column.BoardId = boardId;
+            SqlDataReader dr = cmd.ExecuteReader();
 
-            //    columns.Add(column);
-            //}
-            
-            //_con.Close();
+            while (dr.Read())
+            {
+                var column = new Column();
+
+                column.Id = (Guid) dr["columnId"];
+                column.Name = (string) dr["columnName"];
+                column.Index = (int) dr["columnIndex"];
+                column.BoardId = boardId;
+
+                columns.Add(column);
+            }
+
+            _con.Close();
             return columns;
         }
         public Column GetColumn()
@@ -37,8 +39,12 @@ namespace trello_clone.Server.Services
         }
         public void AddColumn(Guid boardId, string columnName, int columnIndex)
         {
-            string query = $"insert into board_columns (columnName, columnIndex, boardId) values ({columnName},{columnIndex},{boardId})";
+            string query = $"insert into board_columns (columnName, columnIndex, boardId) values (@columnName, @columnIndex, @boardId)";
             SqlCommand cmd = new SqlCommand(query, _con);
+            cmd.Parameters.AddWithValue("@columnName", columnName);
+            cmd.Parameters.AddWithValue("@columnIndex", columnIndex);
+            cmd.Parameters.AddWithValue("@boardId", boardId);
+
             _con.Open();
             cmd.ExecuteNonQuery();
             _con.Close();
@@ -57,11 +63,18 @@ namespace trello_clone.Server.Services
                     cmd.Transaction = trans;
                     cmd.CommandText = @"insert into board_columns (columnName, columnIndex, boardId) values (@columnName1, @columnIndex1, @boardId), (@columnName2, @columnIndex2, @boardId), (@columnName3, @columnIndex3, @boardId);";
                     cmd.Parameters.AddWithValue("@columnName1", "Todo");
+                    cmd.CommandText = @"insert into board_columns (columnId, columnName, columnIndex, boardId) values (@columnId1, @columnName1, @columnIndex1, @boardId), (@columnId2, @columnName2, @columnIndex2, @boardId), (@columnId3, @columnName3, @columnIndex3, @boardId);";
+                    cmd.Parameters.AddWithValue("@columnId1", Guid.NewGuid());
+                    cmd.Parameters.AddWithValue("@columnName1", "Planning");
                     cmd.Parameters.AddWithValue("@columnIndex1", 0);
                     
                     cmd.Parameters.AddWithValue("@columnName2", "In-Prog");
+
+                    cmd.Parameters.AddWithValue("@columnId2", Guid.NewGuid());
+                    cmd.Parameters.AddWithValue("@columnName2", "In-Work");
                     cmd.Parameters.AddWithValue("@columnIndex2", 1);
-                    
+
+                    cmd.Parameters.AddWithValue("@columnId3", Guid.NewGuid());
                     cmd.Parameters.AddWithValue("@columnName3", "Completed");
                     cmd.Parameters.AddWithValue("@columnIndex3", 2);
 
