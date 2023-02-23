@@ -51,27 +51,19 @@ namespace trello_clone.Server.Services
         }
         public void AddBasicColumns(Guid boardId)
         {
-            var columnNames = new List<string>() { "Todo", "In-Prog", "Completed" };
-
-            string query = $"insert into board_columns (columnName, columnIndex, boardId) values ({boardId},{columnNames[0]},{0}), ({boardId},{columnNames[1]},{1}), ({boardId},{columnNames[2]},{2})";
-
             _con.Open();
             using (SqlTransaction trans = _con.BeginTransaction())
             {
                 using (SqlCommand cmd = _con.CreateCommand())
                 {
                     cmd.Transaction = trans;
-                    cmd.CommandText = @"insert into board_columns (columnName, columnIndex, boardId) values (@columnName1, @columnIndex1, @boardId), (@columnName2, @columnIndex2, @boardId), (@columnName3, @columnIndex3, @boardId);";
-                    cmd.Parameters.AddWithValue("@columnName1", "Todo");
                     cmd.CommandText = @"insert into board_columns (columnId, columnName, columnIndex, boardId) values (@columnId1, @columnName1, @columnIndex1, @boardId), (@columnId2, @columnName2, @columnIndex2, @boardId), (@columnId3, @columnName3, @columnIndex3, @boardId);";
                     cmd.Parameters.AddWithValue("@columnId1", Guid.NewGuid());
-                    cmd.Parameters.AddWithValue("@columnName1", "Planning");
+                    cmd.Parameters.AddWithValue("@columnName1", "Todo");
                     cmd.Parameters.AddWithValue("@columnIndex1", 0);
-                    
-                    cmd.Parameters.AddWithValue("@columnName2", "In-Prog");
 
                     cmd.Parameters.AddWithValue("@columnId2", Guid.NewGuid());
-                    cmd.Parameters.AddWithValue("@columnName2", "In-Work");
+                    cmd.Parameters.AddWithValue("@columnName2", "In-Prog");
                     cmd.Parameters.AddWithValue("@columnIndex2", 1);
 
                     cmd.Parameters.AddWithValue("@columnId3", Guid.NewGuid());
