@@ -10,7 +10,7 @@ namespace trello_clone.Server.Controllers
     [ApiController]
     public class BoardsController : ControllerBase
     {
-        private BoardService _boardService = new BoardService();
+        private IBoardService _boardService = new BoardService();
 
         private IEnumerable<Board> boards => _boardService.GetBoards();
 
@@ -19,7 +19,7 @@ namespace trello_clone.Server.Controllers
             _boardService = new BoardService();
         }
 
-        [HttpGet("List")]
+        [HttpGet("BoardList")]
         public IEnumerable<Board> Get()
         {
             return _boardService.GetBoards();

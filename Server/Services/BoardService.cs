@@ -13,8 +13,8 @@ namespace trello_clone.Server.Services
 {
     public class BoardService : IBoardService
     {
-        private SqlConnection _con = new(LocalServerConnection.ConnectionString);
-        private ColumnService _columnService = new();
+        private SqlConnection _con = new SqlConnection(LocalServerConnection.ConnectionString);
+        private IColumnService _columnService = new ColumnService();
         public IEnumerable<Board> GetBoards()
         {
             var boards = new List<Board>();
@@ -33,13 +33,14 @@ namespace trello_clone.Server.Services
             {
                 Board board = new();
 
-                board.ID = (Guid) dr["boardId"];
+                board.Id = (Guid) dr["boardId"];
                 board.Name = (string) dr["boardName"];
-                board.Columns = (List<Column>) _columnService.GetColumns(board.ID);
 
                 boards.Add(board);
             }
             _con.Close();
+
+            boards.ForEach(board => board.Columns = (List<Column>) _columnService.GetColumns(board.Id));
 
             return boards;
         }
@@ -50,10 +51,9 @@ namespace trello_clone.Server.Services
             return new Board();
         }
 
-        public void AddBoard(string boardName, bool addBasicColumns = true)
+        public void AddBoard(string boardName)
         {
             var boardId = Guid.NewGuid();
-            //string query = $"insert into boards (boardId, boardName) values ({boardId},{boardName})";
 
             _con.Open();
             using (SqlTransaction trans = _con.BeginTransaction())
@@ -70,7 +70,7 @@ namespace trello_clone.Server.Services
             }
             _con.Close();
 
-            if (addBasicColumns) _columnService.AddBasicColumns(boardId);
+            _columnService.AddBasicColumns(boardId);
         }
 
         public void UpdateBoard()
