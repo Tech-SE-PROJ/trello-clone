@@ -20,13 +20,8 @@ namespace trello_clone.Server.Services
             var boards = new List<Board>();
 
             string query = "Select * from boards";
-            SqlCommand cmd = null;
-            try
-            {
-                cmd = new(query, _con);
-                _con.Open();
-            }
-            catch (InvalidOperationException) { Console.WriteLine("Invalid Operation, does this DB exist?"); }
+            SqlCommand cmd = new(query, _con);
+            _con.Open();
             SqlDataReader dr = cmd.ExecuteReader();
 
             while (dr.Read())

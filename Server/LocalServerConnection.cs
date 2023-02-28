@@ -10,7 +10,7 @@ namespace trello_clone.Server
         {
             var connStringBuilder = new SqlConnectionStringBuilder()
             {
-                DataSource = "Broxton-Laptop",
+                DataSource = "XYLA-DEMON\\SQLEXPRESS",
                 InitialCatalog = "trello_clone_DB",
                 IntegratedSecurity = true,
                 TrustServerCertificate = true,
