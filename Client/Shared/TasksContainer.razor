@@ -5,7 +5,7 @@
     </CascadingValue>
 </div>
 @code {
-    [Parameter] public List<TaskModel>? Tasks { get; set; }
+    [Parameter] public List<TaskModel>? Events { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
     [Parameter] public EventCallback<TaskModel> OnStatusUpdated { get; set; }
 
@@ -13,6 +13,13 @@
 
     public async Task UpdateTask(TaskStatuses newStatus)
     {
-        
+        var task = Events.SingleOrDefault(x => x.Id == Payload.Id);
+
+        if(task != null)
+        {
+            task.Status = newStatus;
+            task.LastUpdated = DateTime.Now;
+            await OnStatusUpdated.InvokeAsync(Payload);
+        }
     }
 }
