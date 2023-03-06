@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.ResponseCompression;
-using Plk.Blazor.DragDrop;
+using MudBlazor.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-builder.Services.AddBlazorDragDrop();
+builder.Services.AddMudServices();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

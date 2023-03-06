@@ -1,55 +1,160 @@
 ﻿@page "/boards"
 @using trello_clone.Shared.Classes
+@using Microsoft.AspNetCore.Components
+@using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
 
 <PageTitle>Boards</PageTitle>
 
 <h1>Boards</h1>
 
-<div class="board-page">
-    <div class="add-card">
-        <EditForm class="form-check-inline my-2" Model="newBoardName" OnValidSubmit="() => AddBoard(newBoardName)">
-            <InputText class="form-control mx-2" @bind-Value="newBoardName" />
-            <button class="btn btn-outline-primary" type="submit">Add Board</button>
-        </EditForm>
-        <div class="col">
-            <p>To-Do</p>
-            <Dropzone Items="firstCol" TItem="BoardCard" Class="h-100">
-                <ChildContent>
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>@context.Name</h6>
-                        </div>
-                    </div>
-                </ChildContent>
-            </Dropzone>
-        </div>
-        <div class="col">
-            <p>In Progress</p>
-            <Dropzone Items="secondCol" TItem="BoardCard" Class="h-100">
-                <ChildContent>
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>@context.Name</h6>
-                        </div>
-                    </div>
-                </ChildContent>
-            </Dropzone>
-        </div>
-        <div class="col">
-            <p>Completed</p>
-            <Dropzone Items="thirdCol" TItem="BoardCard" Class="h-100">
-                <ChildContent>
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>@context.Name</h6>
-                        </div>
-                    </div>
-                </ChildContent>
-            </Dropzone>
-        </div>
-    </div>
-</div>
+<EditForm class="form-check-inline my-2" Model="newBoardName" OnValidSubmit="() => AddBoard(newBoardName)">
+	<InputText class="form-control mx-2" @bind-Value="newBoardName" />
+	<button class="btn btn-outline-primary" type="submit">Add Board</button>
+</EditForm>
+
+<MudDropContainer T="BoardCard" @ref="dropContainer" Items="@cards" ItemsSelector="@((item,column) => item.Status == column)" ItemDropped="TaskUpdated" Class="d-flex flex-row">
+	<ChildContent>
+		@foreach (var item in columns)
+		{
+			<MudPaper Elevation="0" Width="224px" MinHeight="400px" Class="pa-4 ma-4 d-flex flex-column mud-background-gray rounded-lg">
+				<MudToolBar DisableGutters="true">
+					<MudText Typo="Typo.subtitle1"><b>@item.Name</b></MudText>
+					<MudSpacer />
+					<MudMenu Icon="@Icons.Material.Rounded.MoreHoriz" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" ListClass="pa-2 d-flex flex-column" PopoverClass="mud-elevation-25">
+						<MudButton Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete" OnClick="@( () => DeleteSection(item))">Delete Section</MudButton>
+						<MudButton Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Rounded.Edit">Rename Section</MudButton>
+					</MudMenu>
+				</MudToolBar>
+				<MudDropZone T="BoardCard" Identifier="@item.Name" Class="mud-height-full" />
+				@if (item.NewTaskOpen)
+				{
+					<MudPaper Elevation="25" Class="pa-2 rounded-lg">
+						<MudTextField @bind-Value="item.NewTaskName" Placeholder="New Task" DisableUnderLine="true" Margin="Margin.Dense" Class="mx-2 mt-n2"></MudTextField>
+						<MudButton OnClick="@(() => AddTask(item))" Size="Size.Small" Color="Color.Primary" FullWidth="true">Add Task</MudButton>
+					</MudPaper>
+				}
+				else
+				{
+					<MudButton OnClick="@(() => item.NewTaskOpen = !item.NewTaskOpen)" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Task</MudButton>
+				}
+			</MudPaper>
+		}
+		<MudPaper Class="pa-4" Elevation="0" Width="224px">
+			@if (addSectionOpen)
+			{
+				<MudPaper Elevation="0" Width="224px" Class="pa-4 d-flex flex-column mud-background-gray rounded-lg">
+					<EditForm Model="@newColumnModel" OnValidSubmit="OnValidSectionSubmit">
+						<DataAnnotationsValidator />
+						<MudTextField @bind-Value="newColumnModel.Name" For="@(() => newColumnModel.Name)" Placeholder="New Section" DisableUnderLine="true"></MudTextField>
+						<MudButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary" FullWidth="true">Add Section</MudButton>
+					</EditForm>
+				</MudPaper>
+			}
+			else
+			{
+				<MudButton OnClick="OpenAddNewSection" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Class="rounded-lg py-2" FullWidth="true">Add Section</MudButton>
+			}
+		</MudPaper>
+	</ChildContent>
+	<ItemRenderer>
+		<MudPaper Elevation="25" Class="pa-4 rounded-lg my-3">@context.Name</MudPaper>
+	</ItemRenderer>
+</MudDropContainer>
+
+@code {
+	private MudDropContainer<BoardCard> dropContainer;
+
+	private bool addSectionOpen;
+
+	private void TaskUpdated(MudItemDropInfo<BoardCard> info)
+	{
+		info.Item.Status = info.DropzoneIdentifier;
+	}
+
+	private List<KanBanSections> columns = new()
+		{
+			new KanBanSections("To Do", false, String.Empty),
+			new KanBanSections("In Progress", false, String.Empty),
+			new KanBanSections("Done", false, String.Empty),
+		};
+
+	public class KanBanSections
+	{
+		public string Name { get; init; }
+		public bool NewTaskOpen { get; set; }
+		public string NewTaskName { get; set; }
+
+		public KanBanSections(string name, bool newTaskOpen, string newTaskName)
+		{
+			Name = name;
+			NewTaskOpen = newTaskOpen;
+			NewTaskName = newTaskName;
+		}
+	}
+
+	private List<BoardCard> cards = new()
+		{
+			//new KanbanTaskItem("Write unit test", "To Do"),
+			//new KanbanTaskItem("Some docu stuff", "To Do"),
+			//new KanbanTaskItem("Walking the dog", "To Do"),
+		};
+
+	KanBanNewForm newColumnModel = new KanBanNewForm();
+
+	public class KanBanNewForm
+	{
+		[Required]
+		[StringLength(10, ErrorMessage = "Name length can't be more than 10.")]
+		public string Name { get; set; }
+	}
+
+	private void OnValidSectionSubmit(EditContext context)
+	{
+		columns.Add(new KanBanSections(newColumnModel.Name, false, String.Empty));
+		newColumnModel.Name = string.Empty;
+		addSectionOpen = false;
+	}
+
+	private void OpenAddNewSection()
+	{
+		addSectionOpen = true;
+	}
+
+	private void AddTask(KanBanSections column)
+	{
+		cards.Add(new BoardCard(column.NewTaskName, column.Name));
+		column.NewTaskName = string.Empty;
+		column.NewTaskOpen = false;
+		dropContainer.Refresh();
+	}
+
+	private void DeleteSection(KanBanSections section)
+	{
+		if (columns.Count == 1)
+		{
+			cards.Clear();
+			columns.Clear();
+		}
+		else
+		{
+			int newIndex = columns.IndexOf(section) - 1;
+			if (newIndex < 0)
+			{
+				newIndex = 0;
+			}
+
+			columns.Remove(section);
+
+			var tasks = this.cards.Where<BoardCard>(x => x.Status == section.Name);
+			foreach (var item in tasks)
+			{
+				item.Status = columns[newIndex].Name;
+			}
+		}
+	}
+}
+
 <body>
     @if (boards == null)
     {
@@ -71,20 +176,6 @@
     private IEnumerable<Board>? boards;
     private string newBoardName = "";
 
-    private List<BoardCard> firstCol = new()
-    {
-        new BoardCard(){Name = "Item 1"},
-        new BoardCard(){Name = "Item 2"}
-    };
-
-    private List<BoardCard> secondCol = new()
-    {
-        new BoardCard(){Name = "Item 3"}
-    };
-
-    private List<BoardCard> thirdCol = new()
-    {
-    };
     protected override async Task OnInitializedAsync()
     {
         await GetBoards();
