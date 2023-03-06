@@ -13,47 +13,47 @@
 	<button class="btn btn-outline-primary" type="submit">Add Board</button>
 </EditForm>
 
-<MudDropContainer T="BoardCard" @ref="dropContainer" Items="@cards" ItemsSelector="@((item,column) => item.Status == column)" ItemDropped="TaskUpdated" Class="d-flex flex-row">
+<MudDropContainer T="BoardCard" @ref="dropContainer" Items="@cards" ItemsSelector="@((item,column) => item.Status == column)" ItemDropped="CardUpdated" Class="d-flex flex-row">
 	<ChildContent>
-		@foreach (var item in columns)
+		@foreach (var card in columns)
 		{
 			<MudPaper Elevation="0" Width="224px" MinHeight="400px" Class="pa-4 ma-4 d-flex flex-column mud-background-gray rounded-lg">
 				<MudToolBar DisableGutters="true">
-					<MudText Typo="Typo.subtitle1"><b>@item.Name</b></MudText>
+					<MudText Typo="Typo.subtitle1"><b>@card.Name</b></MudText>
 					<MudSpacer />
 					<MudMenu Icon="@Icons.Material.Rounded.MoreHoriz" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" ListClass="pa-2 d-flex flex-column" PopoverClass="mud-elevation-25">
-						<MudButton Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete" OnClick="@( () => DeleteSection(item))">Delete Section</MudButton>
+						<MudButton Size="Size.Small" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete" OnClick="@( () => DeleteColumn(card))">Delete Section</MudButton>
 						<MudButton Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Rounded.Edit">Rename Section</MudButton>
 					</MudMenu>
 				</MudToolBar>
-				<MudDropZone T="BoardCard" Identifier="@item.Name" Class="mud-height-full" />
-				@if (item.NewTaskOpen)
+				<MudDropZone T="BoardCard" Identifier="@card.Name" Class="mud-height-full" />
+				@if (card.NewCardOpen)
 				{
 					<MudPaper Elevation="25" Class="pa-2 rounded-lg">
-						<MudTextField @bind-Value="item.NewTaskName" Placeholder="New Task" DisableUnderLine="true" Margin="Margin.Dense" Class="mx-2 mt-n2"></MudTextField>
-						<MudButton OnClick="@(() => AddTask(item))" Size="Size.Small" Color="Color.Primary" FullWidth="true">Add Task</MudButton>
+						<MudTextField @bind-Value="card.NewCardName" Placeholder="New Card" DisableUnderLine="true" Margin="Margin.Dense" Class="mx-2 mt-n2"></MudTextField>
+						<MudButton OnClick="@(() => AddCard(card))" Size="Size.Small" Color="Color.Primary" FullWidth="true">Add Card</MudButton>
 					</MudPaper>
 				}
 				else
 				{
-					<MudButton OnClick="@(() => item.NewTaskOpen = !item.NewTaskOpen)" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Task</MudButton>
+					<MudButton OnClick="@(() => card.NewCardOpen = !card.NewCardOpen)" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Task</MudButton>
 				}
 			</MudPaper>
 		}
 		<MudPaper Class="pa-4" Elevation="0" Width="224px">
-			@if (addSectionOpen)
+			@if (addColumnOpen)
 			{
 				<MudPaper Elevation="0" Width="224px" Class="pa-4 d-flex flex-column mud-background-gray rounded-lg">
 					<EditForm Model="@newColumnModel" OnValidSubmit="OnValidSectionSubmit">
 						<DataAnnotationsValidator />
-						<MudTextField @bind-Value="newColumnModel.Name" For="@(() => newColumnModel.Name)" Placeholder="New Section" DisableUnderLine="true"></MudTextField>
+						<MudTextField @bind-Value="newColumnModel.Name" For="@(() => newColumnModel.Name)" Placeholder="New Column" DisableUnderLine="true"></MudTextField>
 						<MudButton ButtonType="ButtonType.Submit" Size="Size.Small" Color="Color.Primary" FullWidth="true">Add Section</MudButton>
 					</EditForm>
 				</MudPaper>
 			}
 			else
 			{
-				<MudButton OnClick="OpenAddNewSection" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Class="rounded-lg py-2" FullWidth="true">Add Section</MudButton>
+				<MudButton OnClick="OpenAddNewColumn" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Color="Color.Primary" Class="rounded-lg py-2" FullWidth="true">Add Section</MudButton>
 			}
 		</MudPaper>
 	</ChildContent>
@@ -65,44 +65,41 @@
 @code {
 	private MudDropContainer<BoardCard> dropContainer;
 
-	private bool addSectionOpen;
+	private bool addColumnOpen;
 
-	private void TaskUpdated(MudItemDropInfo<BoardCard> info)
+	private void CardUpdated(MudItemDropInfo<BoardCard> info)
 	{
 		info.Item.Status = info.DropzoneIdentifier;
 	}
 
-	private List<KanBanSections> columns = new()
+	private List<Column> columns = new()
 		{
-			new KanBanSections("To Do", false, String.Empty),
-			new KanBanSections("In Progress", false, String.Empty),
-			new KanBanSections("Done", false, String.Empty),
+			new Column("To Do", false, String.Empty),
+			new Column("In Progress", false, String.Empty),
+			new Column("Done", false, String.Empty),
 		};
 
-	public class KanBanSections
+	public class Column
 	{
 		public string Name { get; init; }
-		public bool NewTaskOpen { get; set; }
-		public string NewTaskName { get; set; }
+		public bool NewCardOpen { get; set; }
+		public string NewCardName { get; set; }
 
-		public KanBanSections(string name, bool newTaskOpen, string newTaskName)
+		public Column(string name, bool newCardOpen, string newCardName)
 		{
 			Name = name;
-			NewTaskOpen = newTaskOpen;
-			NewTaskName = newTaskName;
+			NewCardOpen = newCardOpen;
+			NewCardName = newCardName;
 		}
 	}
 
 	private List<BoardCard> cards = new()
 		{
-			//new KanbanTaskItem("Write unit test", "To Do"),
-			//new KanbanTaskItem("Some docu stuff", "To Do"),
-			//new KanbanTaskItem("Walking the dog", "To Do"),
 		};
 
-	KanBanNewForm newColumnModel = new KanBanNewForm();
+	AddNewForm newColumnModel = new AddNewForm();
 
-	public class KanBanNewForm
+	public class AddNewForm
 	{
 		[Required]
 		[StringLength(10, ErrorMessage = "Name length can't be more than 10.")]
@@ -111,25 +108,25 @@
 
 	private void OnValidSectionSubmit(EditContext context)
 	{
-		columns.Add(new KanBanSections(newColumnModel.Name, false, String.Empty));
+		columns.Add(new Column(newColumnModel.Name, false, String.Empty));
 		newColumnModel.Name = string.Empty;
-		addSectionOpen = false;
+		addColumnOpen = false;
 	}
 
-	private void OpenAddNewSection()
+	private void OpenAddNewColumn()
 	{
-		addSectionOpen = true;
+		addColumnOpen = true;
 	}
 
-	private void AddTask(KanBanSections column)
+	private void AddCard(Column column)
 	{
-		cards.Add(new BoardCard(column.NewTaskName, column.Name));
-		column.NewTaskName = string.Empty;
-		column.NewTaskOpen = false;
+		cards.Add(new BoardCard(column.NewCardName, column.Name));
+		column.NewCardName = string.Empty;
+		column.NewCardOpen = false;
 		dropContainer.Refresh();
 	}
 
-	private void DeleteSection(KanBanSections section)
+	private void DeleteColumn(Column column)
 	{
 		if (columns.Count == 1)
 		{
@@ -138,18 +135,18 @@
 		}
 		else
 		{
-			int newIndex = columns.IndexOf(section) - 1;
+			int newIndex = columns.IndexOf(column) - 1;
 			if (newIndex < 0)
 			{
 				newIndex = 0;
 			}
 
-			columns.Remove(section);
+			columns.Remove(column);
 
-			var tasks = this.cards.Where<BoardCard>(x => x.Status == section.Name);
-			foreach (var item in tasks)
+			var tasks = cards.Where<BoardCard>(x => x.Status == column.Name);
+			foreach (var card in cards)
 			{
-				item.Status = columns[newIndex].Name;
+				card.Status = columns[newIndex].Name;
 			}
 		}
 	}
