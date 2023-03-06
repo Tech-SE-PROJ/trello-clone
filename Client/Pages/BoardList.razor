@@ -1,0 +1,102 @@
+﻿@page "/boards"
+@using trello_clone.Shared.Classes
+@inject HttpClient Http
+
+<PageTitle>Boards</PageTitle>
+
+<h1>Boards</h1>
+
+<div class="board-page">
+    <div class="add-card">
+        <EditForm class="form-check-inline my-2" Model="newBoardName" OnValidSubmit="() => AddBoard(newBoardName)">
+            <InputText class="form-control mx-2" @bind-Value="newBoardName" />
+            <button class="btn btn-outline-primary" type="submit">Add Board</button>
+        </EditForm>
+        <div class="col">
+            <p>To-Do</p>
+            <Dropzone Items="firstCol" TItem="BoardCard">
+                <ChildContent>
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>@context.Name</h6>
+                        </div>
+                    </div>
+                </ChildContent>
+            </Dropzone>
+        </div>
+        <div class="col">
+            <p>In Progress</p>
+            <Dropzone Items="secondCol" TItem="BoardCard">
+                <ChildContent>
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>@context.Name</h6>
+                        </div>
+                    </div>
+                </ChildContent>
+            </Dropzone>
+        </div>
+        <div class="col">
+            <p>Completed</p>
+            <Dropzone Items="thirdCol" TItem="BoardCard">
+                <ChildContent>
+                    <div class="card">
+                        <div class="card-body">
+                            <h6>@context.Name</h6>
+                        </div>
+                    </div>
+                </ChildContent>
+            </Dropzone>
+        </div>
+    </div>
+</div>
+<body>
+    @if (boards == null)
+    {
+        <p><em>... loading</em></p>
+    }
+    else
+    {
+        @foreach (var board in boards)
+        {
+            <div>
+                <p>@board.Name</p>
+                <p>@board.Columns.First().Name</p>
+            </div>
+        }
+    }
+</body>
+
+@code {
+    private IEnumerable<Board>? boards;
+    private string newBoardName = "";
+
+    private List<BoardCard> firstCol = new()
+    {
+        new BoardCard(){Name = "Item 1"},
+        new BoardCard(){Name = "Item 2"}
+    };
+
+    private List<BoardCard> secondCol = new()
+    {
+    };
+
+    private List<BoardCard> thirdCol = new()
+    {
+    };
+    protected override async Task OnInitializedAsync()
+    {
+        await GetBoards();
+    }
+
+    private async Task GetBoards()
+    {
+        boards = await Http.GetFromJsonAsync<Board[]>("Boards/BoardList");
+    }
+
+    private async Task AddBoard(string boardName)
+    {
+        await Http.GetAsync($"Boards/Addboard/{boardName}");
+        await GetBoards();
+    }
+}
