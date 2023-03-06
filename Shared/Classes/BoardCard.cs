@@ -17,6 +17,12 @@ namespace trello_clone.Shared.Classes
         public int BoardId { get; set; }
         public DateTime DateCreated { get; set; }
         public DateTime LastModified { get; set; }
+		public string Status { get; set; }
 
+		public BoardCard(string name, string status)
+        {
+            Name = name;
+            Status = status;
+        }
     }
 }

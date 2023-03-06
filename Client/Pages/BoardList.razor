@@ -1,55 +1,36 @@
 ﻿@page "/boards"
 @using trello_clone.Shared.Classes
+@using Microsoft.AspNetCore.Components
+@using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
 
 <PageTitle>Boards</PageTitle>
 
 <h1>Boards</h1>
+@*
+    TODO:
+        Make the button in the EditForm make a new MudCard
+*@
+<EditForm class="form-check-inline my-2" Model="newBoardName" OnValidSubmit="() => AddBoard(newBoardName)">
+	<InputText class="form-control mx-2" @bind-Value="newBoardName" />
+    <MudButton ButtonType="ButtonType.Submit"  StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Board</MudButton>
+</EditForm>
 
-<div class="board-page">
-    <div class="add-card">
-        <EditForm class="form-check-inline my-2" Model="newBoardName" OnValidSubmit="() => AddBoard(newBoardName)">
-            <InputText class="form-control mx-2" @bind-Value="newBoardName" />
-            <button class="btn btn-outline-primary" type="submit">Add Board</button>
-        </EditForm>
-        <div class="col">
-            <p>To-Do</p>
-            <Dropzone Items="firstCol" TItem="BoardCard" Class="h-100">
-                <ChildContent>
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>@context.Name</h6>
-                        </div>
-                    </div>
-                </ChildContent>
-            </Dropzone>
-        </div>
-        <div class="col">
-            <p>In Progress</p>
-            <Dropzone Items="secondCol" TItem="BoardCard" Class="h-100">
-                <ChildContent>
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>@context.Name</h6>
-                        </div>
-                    </div>
-                </ChildContent>
-            </Dropzone>
-        </div>
-        <div class="col">
-            <p>Completed</p>
-            <Dropzone Items="thirdCol" TItem="BoardCard" Class="h-100">
-                <ChildContent>
-                    <div class="card">
-                        <div class="card-body">
-                            <h6>@context.Name</h6>
-                        </div>
-                    </div>
-                </ChildContent>
-            </Dropzone>
-        </div>
-    </div>
-</div>
+<MudCard Outlined="true" Style="width: 20%">
+	<MudCardContent>
+		<MudText>Name of board</MudText>
+		<MudText Typo="Typo.body2">Description of board (optional)</MudText>
+	</MudCardContent>
+	<MudCardActions>
+		<MudButton Href="boards/default"
+				   Target="_self"
+				   Variant="Variant.Filled"
+				   Color="Color.Primary">		   
+			Enter
+		</MudButton>
+	</MudCardActions>
+</MudCard>
+
 <body>
     @if (boards == null)
     {
@@ -71,20 +52,6 @@
     private IEnumerable<Board>? boards;
     private string newBoardName = "";
 
-    private List<BoardCard> firstCol = new()
-    {
-        new BoardCard(){Name = "Item 1"},
-        new BoardCard(){Name = "Item 2"}
-    };
-
-    private List<BoardCard> secondCol = new()
-    {
-        new BoardCard(){Name = "Item 3"}
-    };
-
-    private List<BoardCard> thirdCol = new()
-    {
-    };
     protected override async Task OnInitializedAsync()
     {
         await GetBoards();
