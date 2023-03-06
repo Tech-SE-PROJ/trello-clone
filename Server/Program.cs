@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.ResponseCompression;
-
+using Plk.Blazor.DragDrop;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
-
+builder.Services.AddBlazorDragDrop();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -21,7 +21,6 @@ else
 
 app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
-
 app.UseRouting();
 
 
