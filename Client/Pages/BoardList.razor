@@ -14,7 +14,7 @@
         </EditForm>
         <div class="col">
             <p>To-Do</p>
-            <Dropzone Items="firstCol" TItem="BoardCard">
+            <Dropzone Items="firstCol" TItem="BoardCard" Class="h-100">
                 <ChildContent>
                     <div class="card">
                         <div class="card-body">
@@ -26,7 +26,7 @@
         </div>
         <div class="col">
             <p>In Progress</p>
-            <Dropzone Items="secondCol" TItem="BoardCard">
+            <Dropzone Items="secondCol" TItem="BoardCard" Class="h-100">
                 <ChildContent>
                     <div class="card">
                         <div class="card-body">
@@ -38,7 +38,7 @@
         </div>
         <div class="col">
             <p>Completed</p>
-            <Dropzone Items="thirdCol" TItem="BoardCard">
+            <Dropzone Items="thirdCol" TItem="BoardCard" Class="h-100">
                 <ChildContent>
                     <div class="card">
                         <div class="card-body">
@@ -79,6 +79,7 @@
 
     private List<BoardCard> secondCol = new()
     {
+        new BoardCard(){Name = "Item 3"}
     };
 
     private List<BoardCard> thirdCol = new()
