@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace trello_clone.Shared.Classes
 {
-    public class BoardCard
+    public class TaskCard
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
@@ -19,7 +19,7 @@ namespace trello_clone.Shared.Classes
         public DateTime LastModified { get; set; }
 		public string Status { get; set; }
 
-		public BoardCard(string name, string status)
+		public TaskCard(string name, string status)
         {
             Name = name;
             Status = status;

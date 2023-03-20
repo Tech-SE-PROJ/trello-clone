@@ -1,0 +1,37 @@
+﻿@using Microsoft.AspNetCore.Components
+@using trello_clone.Shared
+@using trello_clone.Shared.Classes
+@implements IDisposable
+@inject StateContainer StateContainer
+
+<h3>@Column?.Name</h3>
+
+<div>
+    @*@if (Column.TaskCards.Any())
+    {
+        @foreach (var taskCard in Column.TaskCards)
+        {
+        
+        }
+        
+    }*@
+
+</div>
+
+@code {
+
+    [Parameter]
+    public Column? Column { get; set; }
+
+    protected override void OnInitialized()
+    {
+        StateContainer.OnChange += StateHasChanged;
+
+        
+    }
+
+    public void Dispose()
+    {
+        StateContainer.OnChange -= StateHasChanged;
+    }
+}
