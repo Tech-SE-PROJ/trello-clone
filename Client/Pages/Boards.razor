@@ -1,8 +1,13 @@
 ﻿@page "/boards"
+@using MudBlazor;
+@using trello_clone.Shared
 @using trello_clone.Shared.Classes
 @using Microsoft.AspNetCore.Components
 @using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
+@inject NavigationManager NavManager
+@inject StateContainer StateContainer
+@implements IDisposable
 
 <PageTitle>Boards</PageTitle>
 
@@ -41,11 +46,11 @@
         @foreach (var board in boards)
         {
             <div>
-                <p>@board.Name</p>
-                <p>@board.Columns.First().Name</p>
+                <p @onclick="() => BoardClicked(board)" >@board.Name</p>
             </div>
         }
     }
+
 </body>
 
 @code {
@@ -54,17 +59,33 @@
 
     protected override async Task OnInitializedAsync()
     {
+        StateContainer.OnChange += StateHasChanged;
+
         await GetBoards();
     }
 
     private async Task GetBoards()
     {
         boards = await Http.GetFromJsonAsync<Board[]>("Boards/BoardList");
+
+        StateContainer.Boards = boards?.ToList();
     }
 
     private async Task AddBoard(string boardName)
     {
         await Http.GetAsync($"Boards/Addboard/{boardName}");
         await GetBoards();
+    }
+
+    private void BoardClicked(Board clickedBoard)
+    {
+        StateContainer.SelectedBoard = clickedBoard;
+
+        NavManager.NavigateTo($"boards/{clickedBoard.Name}");
+    }
+
+    public void Dispose()
+    {
+        StateContainer.OnChange -= StateHasChanged;
     }
 }

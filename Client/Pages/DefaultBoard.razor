@@ -10,7 +10,7 @@
 	Somehow make the default board dynamically link to a new named page...
 	Implement a settings menu in the board panel linking to this page for members, calendar, etc.
 *@
-<MudDropContainer T="BoardCard" @ref="dropContainer" Items="@cards" ItemsSelector="@((item,column) => item.Status == column)" ItemDropped="CardUpdated" Class="d-flex flex-row">
+<MudDropContainer T="TaskCard" @ref="dropContainer" Items="@cards" ItemsSelector="@((item,column) => item.Status == column)" ItemDropped="CardUpdated" Class="d-flex flex-row">
 	<ChildContent>
 		@foreach (var card in columns)
 		{
@@ -23,7 +23,7 @@
 						<MudButton Size="Size.Small" Color="Color.Default" StartIcon="@Icons.Material.Rounded.Edit">Rename Section</MudButton>
 					</MudMenu>
 				</MudToolBar>
-				<MudDropZone T="BoardCard" Identifier="@card.Name" Class="mud-height-full" />
+				<MudDropZone T="TaskCard" Identifier="@card.Name" Class="mud-height-full" />
 				@if (card.NewCardOpen)
 				{
 					<MudPaper Elevation="25" Class="pa-2 rounded-lg">
@@ -60,11 +60,11 @@
 </MudDropContainer>
 
 @code {
-	private MudDropContainer<BoardCard> dropContainer;
+	private MudDropContainer<TaskCard> dropContainer;
 
 	private bool addColumnOpen;
 
-	private void CardUpdated(MudItemDropInfo<BoardCard> info)
+	private void CardUpdated(MudItemDropInfo<TaskCard> info)
 	{
 		info.Item.Status = info.DropzoneIdentifier;
 	}
@@ -90,7 +90,7 @@
 		}
 	}
 
-	private List<BoardCard> cards = new()
+	private List<TaskCard> cards = new()
 	{
 	};
 
@@ -117,7 +117,7 @@
 
 	private void AddCard(Column column)
 	{
-		cards.Add(new BoardCard(column.NewCardName, column.Name));
+		cards.Add(new TaskCard(column.NewCardName, column.Name));
 		column.NewCardName = string.Empty;
 		column.NewCardOpen = false;
 		dropContainer.Refresh();
@@ -140,7 +140,7 @@
 
 			columns.Remove(column);
 
-			var tasks = cards.Where<BoardCard>(x => x.Status == column.Name);
+			var tasks = cards.Where<TaskCard>(x => x.Status == column.Name);
 			foreach (var card in cards)
 			{
 				card.Status = columns[newIndex].Name;

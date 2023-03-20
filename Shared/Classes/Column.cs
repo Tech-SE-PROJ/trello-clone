@@ -12,5 +12,6 @@ namespace trello_clone.Shared.Classes
         public string Name { get; set; }
         public int Index { get; set; }
         public Guid BoardId { get; set; }
+        public List<TaskCard>? TaskCards { get; set; }
     }
 }
