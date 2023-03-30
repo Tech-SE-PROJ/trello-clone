@@ -1,0 +1,50 @@
+﻿@page "/boards/{boardName}"
+@using trello_clone.Client.Components
+@using trello_clone.Shared
+@using trello_clone.Shared.Classes
+@implements IDisposable
+@inject StateContainer StateContainer
+
+<style>
+    .board-title {
+        
+    }
+
+    .column-section {
+        display: flex;
+        justify-content:space-evenly;
+    }
+</style>
+
+@if (Board == null)
+{
+    <p>... Loading</p>
+}
+else
+{
+    <h1>@Board?.Name</h1>
+
+    <div class="column-section">
+        @foreach (var column in Board?.Columns)
+        {
+            <ColumnComponent Column="@column"></ColumnComponent>
+        }
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string? boardName { get; set; }
+
+    public Board? Board => StateContainer.SelectedBoard;
+
+    protected override void OnInitialized()
+    {
+        StateContainer.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        StateContainer.OnChange -= StateHasChanged;
+    }
+}
