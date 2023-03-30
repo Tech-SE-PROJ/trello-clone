@@ -1,6 +1,7 @@
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
-
+using trello_clone.Server.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMudServices();
-
+builder.Services.AddSingleton<LoginService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
