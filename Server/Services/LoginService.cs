@@ -8,6 +8,7 @@ using trello_clone.Shared.Classes;
 using trello_clone.Server.Interfaces;
 using trello_clone.Server;
 using Microsoft.Data.SqlClient;
+using trello_clone.Shared;
 
 namespace trello_clone.Server.Services
 {
@@ -15,7 +16,7 @@ namespace trello_clone.Server.Services
     {
         private SqlConnection _con = new SqlConnection(LocalServerConnection.ConnectionString);
         private ILoginService _loginService = new LoginService();
-
+        private StateContainer stateContainer;
         public void UserRegistration(string userName, string userPass, string userEmail)
         {
             _con.Open();
@@ -39,6 +40,7 @@ namespace trello_clone.Server.Services
         
         public void GetUserAccount(string userName, string userPass)
         {
+            
             var user = new User();
 
             string query = "SELECT * FROM users WHERE userName = @userName AND userPassword = @userPass";
@@ -54,6 +56,7 @@ namespace trello_clone.Server.Services
                     user.Username = (string)dr["userName"];
                     user.Password = (string)dr["userPass"];
                     
+                    stateContainer.LoggedInUser = user;
                 }
                 catch (Exception)
                 {
@@ -64,7 +67,7 @@ namespace trello_clone.Server.Services
         }
         public LoginService()
         {
-            
+            stateContainer = new StateContainer();
         }
     }
 }
