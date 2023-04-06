@@ -2,12 +2,21 @@
 @using MudBlazor;
 @using trello_clone.Shared
 @using trello_clone.Shared.Classes
+@using trello_clone.Client.Components
 @using Microsoft.AspNetCore.Components
 @using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject StateContainer StateContainer
 @implements IDisposable
+
+<style>
+    .add-board {
+        display: flex;
+        flex-direction: row;
+        width: 33%;
+    }
+</style>
 
 <PageTitle>Boards</PageTitle>
 
@@ -16,12 +25,13 @@
     TODO:
         Make the button in the EditForm make a new MudCard
 *@
-<EditForm class="form-check-inline my-2" Model="newBoardName" OnValidSubmit="() => AddBoard(newBoardName)">
-	<InputText class="form-control mx-2" @bind-Value="newBoardName" />
+<EditForm class="add-board" Model="newBoard" OnValidSubmit="AddBoard">
+	<InputText class="form-control mx-2" @bind-Value="newBoard.Name" />
     <MudButton ButtonType="ButtonType.Submit"  StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Board</MudButton>
 </EditForm>
+@*<button class="btn btn-primary" type="button" onclick="() => @OpenModal()">show modal</button>*@
 
-<MudCard Outlined="true" Style="width: 20%">
+@*<MudCard Outlined="true" Style="width: 20%">
 	<MudCardContent>
 		<MudText>Name of board</MudText>
 		<MudText Typo="Typo.body2">Description of board (optional)</MudText>
@@ -34,7 +44,7 @@
 			Enter
 		</MudButton>
 	</MudCardActions>
-</MudCard>
+</MudCard>*@
 
 <body>
     @if (boards == null)
@@ -47,6 +57,7 @@
         {
             <div>
                 <p @onclick="() => BoardClicked(board)" >@board.Name</p>
+                
             </div>
         }
     }
@@ -55,7 +66,8 @@
 
 @code {
     private IEnumerable<Board>? boards;
-    private string newBoardName = "";
+    private Board newBoard = new Board();
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -71,10 +83,13 @@
         StateContainer.Boards = boards?.ToList();
     }
 
-    private async Task AddBoard(string boardName)
+    private async Task AddBoard()
     {
-        await Http.GetAsync($"Boards/Addboard/{boardName}");
+        await Http.GetAsync($"Boards/Addboard/{newBoard.Name}");
+
         await GetBoards();
+
+        newBoard = new Board();
     }
 
     private void BoardClicked(Board clickedBoard)
