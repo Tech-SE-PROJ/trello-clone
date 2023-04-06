@@ -14,5 +14,7 @@ namespace trello_clone.Shared.Classes
         public string? JobTitle { get; set; }
         public string? Email { get; set; }
         public Guid? TeamId { get; set; }
+        public string? Password { get; set; }
+        public string? Username { get; set; }
     }
 }
