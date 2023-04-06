@@ -41,5 +41,5 @@ create table board_cards (
 	lastModifiedDate datetime not null,
 	cardIndex int not null,
 	columnId uniqueidentifier foreign key references board_columns(columnId) not null,
-	boardId uniqueidentifier foreign key references boards(boardId) not null,
+	boardId uniqueidentifier foreign key references boards(boardId),
 );
