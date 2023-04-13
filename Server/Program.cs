@@ -14,7 +14,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMudServices();
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
-builder.Services.AddScoped<ILoginService, LoginService>();
+//builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddSingleton<StateContainer>();
 
 var app = builder.Build();
