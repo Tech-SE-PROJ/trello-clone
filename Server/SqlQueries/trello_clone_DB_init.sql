@@ -7,9 +7,9 @@ create table users (
 	firstName varchar(255) not null,
 	lastName varchar(255) not null,
 	jobTitle varchar(255),
-	userName varchar(255) not null,
+	userName varchar(255) unique not null,
 	userPassword varchar(255) not null,
-	email varchar(255) not null,
+	email varchar(255) unique not null,
 	teamId int,
 );
 

@@ -1,17 +1,48 @@
-﻿@inherits LayoutComponentBase
+﻿@using trello_clone.Shared
+@inherits LayoutComponentBase
+@inject StateContainer stateContainer
+@inject NavigationManager _navigationManager
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 <MudThemeProvider />
+<MudSnackbarProvider />
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
-        </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
+        @if (stateContainer.LoggedInUser is not null)
+        {
+            <div class="top-row px-4">
+                <h3 style="right: 0">Welcome @stateContainer.LoggedInUser.userName !</h3>
+                <a href="http://localhost:5182/Auth" target="_self">Register/Login</a>
+                <a href="http://localhost:5182/Auth/Logout" target="_self">Logout</a>
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            </div>
+            <article class="content px-4">
+                @Body
+            </article>
+        }
+        else if (_navigationManager.Uri == "http://localhost:5182/Auth" || _navigationManager.Uri == "http://localhost:5182/")
+        {
+            <div class="top-row px-4">
+                <a href="http://localhost:5182/Auth" target="_self">Register/Login</a>
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            </div>
+            <article class="content px-4">
+                @Body
+            </article>
+        }
+        else
+        {
+            <div class="top-row px-4">
+                <a href="http://localhost:5182/Auth" target="_self">Register/Login</a>
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+            </div>
+            <article class="content px-4">
+                <h1> Please register/login to continue. </h1>
+            </article>
+        }
     </main>
 </div>

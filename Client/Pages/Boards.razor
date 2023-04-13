@@ -21,12 +21,10 @@
 <PageTitle>Boards</PageTitle>
 
 <h1>Boards</h1>
-@*
-    TODO:
-        Make the button in the EditForm make a new MudCard
-*@
+
 <EditForm class="add-board" Model="newBoard" OnValidSubmit="AddBoard">
 	<InputText class="form-control mx-2" @bind-Value="newBoard.Name" />
+
     <MudButton ButtonType="ButtonType.Submit"  StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Board</MudButton>
 </EditForm>
 @*<button class="btn btn-primary" type="button" onclick="() => @OpenModal()">show modal</button>*@

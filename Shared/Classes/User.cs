@@ -1,20 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿using System.ComponentModel.DataAnnotations;
 namespace trello_clone.Shared.Classes
 {
+    [Serializable]
     public class User
     {
-        public Guid? Id { get; set; }
+        [Key]
+        public Guid? userId { get; set; }
+        [Required]
+        public string? email { get; set; }
+        [Required]
+        public string? userPassword { get; set; }
+        [Required]
+        public string? userName { get; set; }
+
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? JobTitle { get; set; }
-        public string? Email { get; set; }
-        public Guid? TeamId { get; set; }
-        public string? Password { get; set; }
-        public string? Username { get; set; }
+        public int? TeamId { get; set; }
+
+        public User()
+        {
+            
+        }
     }
 }
