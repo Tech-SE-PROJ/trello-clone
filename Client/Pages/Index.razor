@@ -14,8 +14,12 @@
     protected override async Task OnInitializedAsync()
     {
         stateContainer.LoggedInUser = await localStorage.GetItemAsync<User>("1");
+        if (stateContainer.isCompleted) return;
         if (stateContainer.LoggedInUser is not null)
+        {
             Snackbar.Add("Found previous login, welcome back!", Severity.Success);
+            stateContainer.isCompleted = true;
+        }
     }
 }
 
