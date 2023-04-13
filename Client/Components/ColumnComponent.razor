@@ -4,19 +4,48 @@
 @implements IDisposable
 @inject StateContainer StateContainer
 
-<h3>@Column?.Name</h3>
+<style>
+    .column {
+        border:solid;
+        border-radius: 5px;
+        border-width: 1px;
+        width: 33%;
+        height: 100%;
+        overflow: scroll;
+    }
 
-<div>
-    @*@if (Column.TaskCards.Any())
-    {
-        @foreach (var taskCard in Column.TaskCards)
+    .tasks {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .container {
+
+    }
+</style>
+
+
+<div class="column">
+    <h3>@Column?.Name</h3>
+
+    <div class="tasks">
+        @if (Column.TaskCards == null)
         {
-        
+            <p>Empty</p>
         }
-        
-    }*@
+        else
+        {
+            @foreach (var taskCard in Column.TaskCards)
+            {
+                <TaskCardComponent TaskCard="@taskCard" />
+            }
+        }
+    </div>
 
+    
 </div>
+
 
 @code {
 
