@@ -29,12 +29,12 @@ namespace trello_clone.Shared
         private User? _loggedInUser;
         public User? LoggedInUser
         {
-            get => _loggedInUser; //these might be useless, convert to auto-prop maybe
+            get => _loggedInUser;
             set => _loggedInUser = value;
         }
         public event Action? OnChange;
 
         private void NotifyStateChanged() => OnChange?.Invoke();
- 
+
     }
 }
