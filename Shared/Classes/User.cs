@@ -5,18 +5,18 @@ namespace trello_clone.Shared.Classes
     public class User
     {
         [Key]
-        public Guid? userId { get; set; }
+        public Guid? UserId { get; set; }
         [Required]
-        public string? email { get; set; }
+        public string? UserEmail { get; set; }
         [Required]
-        public string? userPassword { get; set; }
+        public string? UserPassword { get; set; }
         [Required]
-        public string? userName { get; set; }
-
+        public string? UserName { get; set; }
+        [Required]
+        public int? TeamId { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
         public string? JobTitle { get; set; }
-        public int? TeamId { get; set; }
 
         public User()
         {

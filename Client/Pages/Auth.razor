@@ -23,6 +23,8 @@
                               Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
                               RequiredError="Password is required!" />
                 <MudTextField @bind-Value="registerEmail" T="string" Label="Email" Required="true" RequiredError="Email is required!" />
+                <MudTextField @bind-Value="registerTeamId" T="int" Label="Team ID" Required="true" RequiredError="Team ID is required!" />
+
                 <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true">Register</MudButton>
             </MudForm>
         </MudPaper>
@@ -54,6 +56,7 @@
     string registerName { get; set; } = null!;
     string registerPass { get; set; } = null!;
     string registerEmail { get; set; } = null!;
+    int registerTeamId { get; set; }
     string loginName { get; set; } = null!;
     string loginPass { get; set; } = null!;
 
@@ -84,7 +87,7 @@
 
     protected async Task AddUser()
     {
-        var user = new User { userId = Guid.NewGuid(), email = registerEmail, userName = registerName, userPassword = registerPass, TeamId = 1, FirstName = "a", JobTitle = "a", LastName = "a" };
+        var user = new User { UserId = Guid.NewGuid(), UserEmail = registerEmail, UserName = registerName, UserPassword = registerPass, TeamId = registerTeamId, FirstName = "a", JobTitle = "a", LastName = "a" };
         try
         {
             var res = await Http.PostAsJsonAsync("Auth", user);
@@ -111,7 +114,7 @@
     {
         foreach(User user in users!)
         {
-            if (user.userName == loginName && user.userPassword == loginPass)
+            if (user.UserName == loginName && user.UserPassword == loginPass)
             {
                 Snackbar.Add("Successful login.", Severity.Success);
                 stateContainer.LoggedInUser = user;

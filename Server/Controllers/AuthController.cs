@@ -25,7 +25,7 @@ namespace trello_clone.Server.Controllers
         [HttpPost]
         public async Task<User?> Post([FromBody] User user)
         {
-            if (db.users.Any(u => u.userName == user.userName)) //checking if a username already exists
+            if (db.users.Any(u => u.UserName == user.UserName)) //checking if a username already exists
             {
                 return null;
             }
@@ -40,8 +40,8 @@ namespace trello_clone.Server.Controllers
         [HttpGet("Login")]
         public Task<User?>? Login([FromBody] User user)
         {
-            if (db.users.Any(u => !(u.userName == user.userName)) || 
-                db.users.Any(u => !(u.userPassword == user.userPassword))) //checking if a username doesn't exist
+            if (db.users.Any(u => !(u.UserName == user.UserName)) || 
+                db.users.Any(u => !(u.UserPassword == user.UserPassword))) //checking if a username doesn't exist
             {
                 return null;
             }
@@ -50,7 +50,7 @@ namespace trello_clone.Server.Controllers
                 using (db)
                 {
                     User? foundUser = db.users
-                                    .Where(b => b.userName == $"{user.userName}")
+                                    .Where(b => b.UserName == $"{user.UserName}")
                                     .FirstOrDefault();
                     return Task.FromResult(foundUser); //test
                 }
