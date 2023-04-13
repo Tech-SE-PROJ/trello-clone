@@ -12,10 +12,7 @@
 <PageTitle>Boards</PageTitle>
 
 <h1>Boards</h1>
-@*
-    TODO:
-        Make the button in the EditForm make a new MudCard
-*@
+
 <EditForm class="form-check-inline my-2" Model="newBoardName" OnValidSubmit="() => AddBoard(newBoardName)">
 	<InputText class="form-control mx-2" @bind-Value="newBoardName" />
     <MudButton ButtonType="ButtonType.Submit"  StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Board</MudButton>
