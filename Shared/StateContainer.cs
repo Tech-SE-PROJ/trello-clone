@@ -36,5 +36,7 @@ namespace trello_clone.Shared
 
         private void NotifyStateChanged() => OnChange?.Invoke();
 
+        public bool isCompleted;
+
     }
 }
