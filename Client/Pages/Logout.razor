@@ -13,6 +13,6 @@
         stateContainer.LoggedInUser = null;
         Snackbar.Add("Logged out.", Severity.Success);
         _navigationManager.NavigateTo("/Auth");
-        await localStorage.ClearAsync();  //untested
+        await localStorage.ClearAsync();
     }
 }
