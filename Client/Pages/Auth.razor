@@ -12,11 +12,11 @@
 
 <PageTitle>Auth</PageTitle>
 
-<MudGrid Justify="Justify.Center">
+<MudGrid>
     <MudItem xs="12" sm="6">
         <MudPaper Class="d-flex align-center justify-center mud-width-full py-8" Outlined>
-            <MudForm @ref="form1" @bind-IsValid="@success" @bind-Errors="@errors" @onsubmit="AddUser">
-                <MudElement HtmlTag="h1">Registration</MudElement>
+            <MudForm @ref="form1" @bind-IsValid="@success" @bind-Errors="@errors1">
+                <MudText Align="Align.Center" Typo="Typo.h2">Registration</MudText>
                 <MudTextField @bind-Value="registerName" T="string" Label="Username" Required="true" RequiredError="User name is required!" />
                 <MudTextField @bind-Value="registerPass" T="string" Label="Password" HelperText="Choose a strong password" @ref="pwField1"
                               InputType="InputType.Password"
@@ -24,30 +24,28 @@
                               RequiredError="Password is required!" />
                 <MudTextField @bind-Value="registerEmail" T="string" Label="Email" Required="true" RequiredError="Email is required!" />
                 <MudTextField @bind-Value="registerTeamId" T="int" Label="Team ID" Required="true" RequiredError="Team ID is required!" />
-
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true">Register</MudButton>
+                <MudButton Class="mt-4 d-flex" Style="left: 95px;" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true" @onclick="AddUser">Register</MudButton>
             </MudForm>
         </MudPaper>
     </MudItem>
     <MudItem xs="12" sm="6">
         <MudPaper Class="d-flex align-center justify-center mud-width-full mud-height-full py-8" Outlined>
-            <MudForm @ref="form2" @bind-IsValid="@success" @bind-Errors="@errors2" @onsubmit="Login">
-                <MudElement HtmlTag="h1">Login</MudElement>
+            <MudForm @ref="form2" @bind-IsValid="@success" @bind-Errors="@errors2">
+                <MudText Align="Align.Center" Typo="Typo.h2">Login</MudText>
                 <MudTextField @bind-Value="loginName" T="string" Label="Username" Required="true" RequiredError="User name is required!" />
                 <MudTextField @bind-Value="loginPass" T="string" Label="Password" HelperText="Choose a strong password" @ref="pwField2"
                               InputType="InputType.Password"
                               Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
                               RequiredError="Password is required!" />
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true">Login</MudButton>
+                <MudButton Class="mt-4 d-flex" Style="left: 45px;" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true" @onclick="Login">Login</MudButton>
             </MudForm>
         </MudPaper>
     </MudItem>
 </MudGrid>
 
 @code {
-    //@*OnClick="@(()=>form2.Validate())*@
     bool success = false;
-    string[] errors = { }; 
+    string[] errors1 = { }; 
     string[] errors2 = { };
     MudTextField<string>? pwField1 = null!;
     MudTextField<string>? pwField2 = null!;
@@ -96,6 +94,7 @@
                 throw new ApplicationException();
             if (String.IsNullOrEmpty(registerName) || String.IsNullOrEmpty(registerPass) || String.IsNullOrEmpty(registerEmail))
                 throw new Exception();
+            form1.Reset();
         }
         catch(ApplicationException)
         {
