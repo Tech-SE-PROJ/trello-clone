@@ -1,0 +1,66 @@
+﻿@using Microsoft.AspNetCore.Components
+@using trello_clone.Shared
+@using trello_clone.Shared.Classes
+@implements IDisposable
+@inject StateContainer StateContainer
+
+<style>
+    .column {
+        border:solid;
+        border-radius: 5px;
+        border-width: 1px;
+        width: 33%;
+        height: 100%;
+        overflow: scroll;
+    }
+
+    .tasks {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .container {
+
+    }
+</style>
+
+
+<div class="column">
+    <h3>@Column?.Name</h3>
+
+    <div class="tasks">
+        @if (Column.TaskCards == null)
+        {
+            <p>Empty</p>
+        }
+        else
+        {
+            @foreach (var taskCard in Column.TaskCards)
+            {
+                <TaskCardComponent TaskCard="@taskCard" />
+            }
+        }
+    </div>
+
+    
+</div>
+
+
+@code {
+
+    [Parameter]
+    public Column? Column { get; set; }
+
+    protected override void OnInitialized()
+    {
+        StateContainer.OnChange += StateHasChanged;
+
+        
+    }
+
+    public void Dispose()
+    {
+        StateContainer.OnChange -= StateHasChanged;
+    }
+}

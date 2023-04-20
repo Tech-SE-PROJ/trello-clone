@@ -7,6 +7,7 @@ namespace trello_clone.Server.Services
     public class ColumnService : IColumnService
     {
         private SqlConnection _con = LocalServerConnection.Connection;
+        private ITaskCardService _taskCardService = new TaskCardService();
         public ICollection<Column> GetColumns(Guid boardId)
         {
             var columns = new List<Column>();
@@ -31,6 +32,9 @@ namespace trello_clone.Server.Services
             }
 
             _con.Close();
+
+            columns.ForEach(column => column.TaskCards = (List<TaskCard>)_taskCardService.GetTaskCards(column.Id));
+
             return columns;
         }
         public Column GetColumn()
@@ -81,6 +85,7 @@ namespace trello_clone.Server.Services
         {
 
         }
+
         public void DeleteColumn()
         {
 

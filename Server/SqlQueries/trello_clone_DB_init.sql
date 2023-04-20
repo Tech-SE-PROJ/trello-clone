@@ -3,14 +3,14 @@ create database trello_clone_DB;
 use trello_clone_DB;
 
 create table users ( 
-	userId uniqueidentifier primary key not null,
-	firstName varchar(255) not null,
-	lastName varchar(255) not null,
-	jobTitle varchar(255),
-	userName varchar(255) not null,
-	userPassword varchar(255) not null,
-	email varchar(255) not null,
-	teamId int,
+	UserId uniqueidentifier primary key not null,
+	FirstName varchar(255) not null,
+	LastName varchar(255) not null,
+	JobTitle varchar(255),
+	UserName varchar(255) unique not null,
+	UserPassword varchar(255) not null,
+	UserEmail varchar(255) unique not null,
+	TeamId int not null,
 );
 
 create table teams (
@@ -41,5 +41,5 @@ create table board_cards (
 	lastModifiedDate datetime not null,
 	cardIndex int not null,
 	columnId uniqueidentifier foreign key references board_columns(columnId) not null,
-	boardId uniqueidentifier foreign key references boards(boardId) not null,
+	boardId uniqueidentifier foreign key references boards(boardId),
 );
