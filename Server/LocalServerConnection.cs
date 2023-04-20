@@ -13,7 +13,7 @@ namespace trello_clone.Server
 
             var connStringBuilder = new SqlConnectionStringBuilder()
             {
-                DataSource = "XYLA-DEMON\\SQLEXPRESS",
+                DataSource = "ABRAHAM",
                 InitialCatalog = "trello_clone_DB",
                 IntegratedSecurity = true,
                 TrustServerCertificate = true,
