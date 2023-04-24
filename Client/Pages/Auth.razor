@@ -80,7 +80,8 @@
     protected override async Task OnInitializedAsync()
     {
         //await base.OnInitializedAsync();
-        users = await Http.GetFromJsonAsync<User[]>("Auth");
+        //users = await Http.GetFromJsonAsync<User[]>("Auth");
+        users = await Http.GetFromJsonAsync<User[]>("user/get-users");
     }
 
     protected async Task AddUser()
@@ -88,7 +89,7 @@
         var user = new User { UserId = Guid.NewGuid(), UserEmail = registerEmail, UserName = registerName, UserPassword = registerPass, TeamId = registerTeamId, FirstName = "a", JobTitle = "a", LastName = "a" };
         try
         {
-            var res = await Http.PostAsJsonAsync("Auth", user);
+            var res = await Http.PostAsJsonAsync("user/add-user", user);
             string content = await res.Content.ReadAsStringAsync();
             if (String.IsNullOrEmpty(content))
                 throw new ApplicationException();
