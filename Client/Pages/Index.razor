@@ -9,28 +9,24 @@
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
 @using trello_clone.Shared.Classes
 
-<select @onchange="LoadCalendar">
+@*<select @onchange="LoadCalendar">
     @foreach (string monthName in monthNames)
     {
         <option>@monthName</option>
     }
-</select>
+</select>*@
 @code{
-    List<string> monthNames = new List<string>();
-    List<string> days = new List<string>();
-    List<Weekclass> weeks = new List<Weekclass>();
-    DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month,1);
-    DateTime endDate = (new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)).AddMonths(1).AddDays(-1);
+    //List<string> monthNames = new List<string>();
+    //List<string> days = new List<string>();
+    //List<Weekclass> weeks = new List<Weekclass>();
+    //DateTime startDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month,1);
+    //DateTime endDate = (new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1)).AddMonths(1).AddDays(-1);
 
-    protected override void OnInitialized()
-    {
-        monthNames = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.MonthGenitiveNames.ToList();
-
-    }
-    private void LoadCalendar(ChangeEventArgs e)
-    {
-        var month = e.Value.ToString();
-    }
+    
+    //private void LoadCalendar(ChangeEventArgs e)
+    //{
+    //    var month = e.Value.ToString();
+    //}
    
     protected override async Task OnInitializedAsync()
     {
