@@ -32,8 +32,8 @@
         </style>
 
 <h1>Blazor Calendar</h1>
-@if(displayModal)
-{
+@*@if(displayModal)
+*@@*{
     <div id ="divModal">
         <div class="container">
             <div class="panel panel-default">
@@ -77,7 +77,7 @@
                         </div>
                         </div>
     </div>
-}
+}*@
 
 <select @onchange="LoadCalendar">
     @foreach (string monthName in monthNames)
