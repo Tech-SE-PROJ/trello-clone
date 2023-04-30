@@ -57,6 +57,7 @@
     int registerTeamId { get; set; }
     string loginName { get; set; } = null!;
     string loginPass { get; set; } = null!;
+    Salting salt = new();
 
     private User[]? users;
 
@@ -80,13 +81,13 @@
     protected override async Task OnInitializedAsync()
     {
         //await base.OnInitializedAsync();
-        //users = await Http.GetFromJsonAsync<User[]>("Auth");
         users = await Http.GetFromJsonAsync<User[]>("user/get-users");
     }
 
     protected async Task AddUser()
     {
-        var user = new User { UserId = Guid.NewGuid(), UserEmail = registerEmail, UserName = registerName, UserPassword = registerPass, TeamId = registerTeamId, FirstName = "a", JobTitle = "a", LastName = "a" };
+        string hashedPass = salt.HashPassword(registerPass, out var salted);
+        User user = new User { UserId = Guid.NewGuid(), UserEmail = registerEmail, UserName = registerName, UserPassword = hashedPass, TeamId = registerTeamId, FirstName = "a", JobTitle = "a", LastName = "a" };
         try
         {
             var res = await Http.PostAsJsonAsync("user/add-user", user);
@@ -112,14 +113,15 @@
 
     protected async Task Login()
     {
+        string hashedPass = salt.HashPassword(loginPass, out var entropy); //entropy makes each hashed password more random
+        bool isVerified = salt.VerifyPassword(loginPass, hashedPass, entropy); 
         foreach(User user in users!)
         {
-            if (user.UserName == loginName && user.UserPassword == loginPass)
+            if (user.UserName == loginName && isVerified)
             {
-                Snackbar.Add("Successful login.", Severity.Success);
                 stateContainer.LoggedInUser = user;
-                await localStorage.SetItemAsync<User>("1", user);
-                stateContainer.LoggedInUser = await localStorage.GetItemAsync<User>("1");
+                await localStorage.SetItemAsync<User>("login", user);
+                stateContainer.LoggedInUser = await localStorage.GetItemAsync<User>("login"); //probably pointless
                 _navigationManager.NavigateTo("/");
                 return;
             }
