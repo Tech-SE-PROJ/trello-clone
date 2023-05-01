@@ -47,12 +47,28 @@ namespace trello_clone.Server.Controllers
         public async Task<TaskCard>? AssignUserToCard([FromBody] Guid cardId, Guid userId) 
         {
             TaskCard? cardToEdit = await db.board_cards.FindAsync(cardId);
+            if (cardToEdit is null)
+                return null;
             using (db)
             {
                 cardToEdit!.AssignedUserId = userId;
                 await db.SaveChangesAsync();
             }
             return cardToEdit; //save these changes to localStorage
+        }
+
+        [HttpPut("store-date/{cardId}")]
+        public async Task<TaskCard?> StoreDate([FromBody] DateTime date, Guid cardId)
+        {
+            TaskCard? cardToEdit = await db.board_cards.FindAsync(cardId);
+            if(cardToEdit is null)
+                return null;
+            using (db)
+            {
+                cardToEdit.EndDate = date;
+                await db.SaveChangesAsync();
+            }
+            return cardToEdit;
         }
     }
 }

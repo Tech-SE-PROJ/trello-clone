@@ -20,23 +20,31 @@
 </style>
 
 <div class="task-container">
-    <h3>@taskCard.Name<MudIconButton Icon="@Icons.Material.Filled.Settings" @onclick="OpenCardSettings"></MudIconButton></h3>
+    <h3>@taskCard!.Name<MudIconButton Icon="@Icons.Material.Filled.Settings" @onclick="OpenCardSettings"></MudIconButton></h3>
     <p>Assigned Person: @assignedUserName</p>
     <p>Date Created: @taskCard.DateCreated</p>
     <p>Last Modified: @taskCard.LastModified</p>
+    @if(monthDayStr is null)
+    {
+        <p>No Completion Date</p>
+    }
+    else
+    {
+        <p>Completion Date: @monthDayStr</p>
+    }
 </div>
 
 <MudDialog @bind-IsVisible="visible" Options="dialogOptions">
     <DialogContent>
         <MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
         <MudMenu Label="Assign a user" Variant="Variant.Filled" Color="Color.Primary">
-            @foreach (User user in users!)
+            @foreach (User user in users!) @*should ONLY get users with the correct teamId for the board!!!!!*@
             {
-                <MudMenuItem OnClick="@(() => AssignUserToCard(user.UserId))">@user.UserName</MudMenuItem>
+                <MudMenuItem OnClick="@(() => AssignUserToCard(user.UserId))">@user.UserName</MudMenuItem> 
             }
         </MudMenu>
         <MudText Typo="Typo.h5">@assignedUserName</MudText>
-        <MudDatePicker Label="Date of Completion" HelperText="@_monthDay?.ToShortDateString()" @bind-Date="_monthDay" OpenTo="OpenTo.Month" FixYear="@DateTime.Today.Year" DateFormat="MM/dd" />
+        <MudDatePicker DisableToolbar="true" DateChanged=@((endDate) => StoreCalendarDate(endDate)) Label="Date of Completion" OpenTo="OpenTo.Date" FixYear="@DateTime.Today.Year" DateFormat="dd/MM/yyyy"/>
     </DialogContent>
     <DialogActions>
     </DialogActions>
@@ -44,29 +52,44 @@
 
 @code {
     [Parameter]
-    public TaskCard taskCard { get; set; }
+    public TaskCard? taskCard { get; set; }
     private User[]? users;
     private string? userWithCardIdName;
-    private DateTime? _monthDay;
-    private User? foundUser;
+    private string? monthDayStr;
+    private User foundUser = null!;
     private string? assignedUserName;
     private List<TaskCard>? taskCards { get; set; }
-    DialogOptions dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
     private bool visible = false;
+
+    DialogOptions dialogOptions = new() { CloseButton = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
+    protected void OpenCardSettings() => visible = true;
 
     private async Task AssignUserToCard(Guid? id)
     {
-        await Http.PutAsJsonAsync($"TaskCard/AssignUserToCard/user/{id}", taskCard.Id);
+        await Http.PutAsJsonAsync($"TaskCard/AssignUserToCard/user/{id}", taskCard!.Id);
         var updatedCard = await Http.GetFromJsonAsync<TaskCard>($"TaskCard/get-task-card/{stateContainer.SelectedBoard!.Id}/{taskCard.Id}");
         taskCard.AssignedUserId = id;
-        AddCardToList(updatedCard);
-        await localStorage.SetItemAsync<List<TaskCard>>($"taskcards/{updatedCard.BoardId}", taskCards!);
+        AddCardToList(updatedCard!);
+        await localStorage.SetItemAsync<List<TaskCard>>($"taskcards/{updatedCard!.BoardId}", taskCards!);
+        AssignUserName(); 
         StateHasChanged();
+    }
+
+    private void AssignUserName()
+    {
+        foreach (User user in users!)
+        {
+            if (user.UserId == taskCard!.AssignedUserId)
+            {
+                assignedUserName = user.UserName;
+                return;
+            }
+        }
     }
 
     private List<TaskCard>? AddCardToList(TaskCard newCard)
     {
-        var existingCardIndex = taskCards!.FindIndex(cards => cards.Index == taskCard.Index);
+        var existingCardIndex = taskCards!.FindIndex(cards => cards.Index == taskCard!.Index);
         taskCards[existingCardIndex] = newCard;
         return taskCards;
     }
@@ -81,23 +104,30 @@
         //taskCard.BoardId = stateContainer.SelectedBoard!.Id; //is this needed
         users = await Http.GetFromJsonAsync<User[]>("user/get-users");
         taskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/get-task-cards/{stateContainer.SelectedBoard!.Id}");
-        if (taskCard.AssignedUserId is not null)
+        if (taskCard!.AssignedUserId is not null)
         {
             var foundUser = await Http.GetFromJsonAsync<User>($"user/{taskCard.AssignedUserId}");
-            assignedUserName = foundUser.UserName;
+            assignedUserName = foundUser!.UserName;
         }
         else
             assignedUserName = "None";
     }
 
-    protected void OpenCardSettings() => visible = true;
-    //{
-    //    //var columnId = Columns.First().Id;
-    //    //var newCardIndex = Columns.First().TaskCards != null ? Columns.First().TaskCards.Count : 0;
-    //    DialogOptions options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true };
-
-    //    DialogService.Show("Delete", /*parameters,*/ options);
-    //}
+    protected async Task StoreCalendarDate(DateTime? endDate)
+    {
+        if (endDate is null)
+        {
+            Snackbar.Add("Client error, unable to save DateTime", Severity.Error);
+            return;
+        }
+        var res = await Http.PutAsJsonAsync<DateTime?>($"taskcard/store-date/{taskCard!.Id}", endDate);
+        if (!res.IsSuccessStatusCode)
+        {
+            Snackbar.Add("Server error, unable to save DateTime to db", Severity.Error);
+            return;
+        }
+        monthDayStr = $"{endDate.Value.Day}/{endDate.Value.Month}/{endDate.Value.Year}";
+    }
 
     public void Dispose()
     {
