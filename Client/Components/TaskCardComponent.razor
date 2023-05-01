@@ -54,9 +54,7 @@
     [Parameter]
     public TaskCard? taskCard { get; set; }
     private User[]? users;
-    private string? userWithCardIdName;
     private string? monthDayStr;
-    private User foundUser = null!;
     private string? assignedUserName;
     private List<TaskCard>? taskCards { get; set; }
     private bool visible = false;
@@ -67,31 +65,17 @@
     private async Task AssignUserToCard(Guid? id)
     {
         await Http.PutAsJsonAsync($"TaskCard/AssignUserToCard/user/{id}", taskCard!.Id);
-        var updatedCard = await Http.GetFromJsonAsync<TaskCard>($"TaskCard/get-task-card/{stateContainer.SelectedBoard!.Id}/{taskCard.Id}");
-        taskCard.AssignedUserId = id;
-        AddCardToList(updatedCard!);
-        await localStorage.SetItemAsync<List<TaskCard>>($"taskcards/{updatedCard!.BoardId}", taskCards!);
+        taskCard = await Http.GetFromJsonAsync<TaskCard>($"TaskCard/get-task-card/{stateContainer.SelectedBoard!.Id}/{taskCard.Id}");
+        //await AddCardToList(updatedCard!);
+        //await localStorage.SetItemAsync<List<TaskCard>>($"taskcards/{updatedCard!.BoardId}", taskCards!);
         AssignUserName(); 
         StateHasChanged();
     }
 
     private void AssignUserName()
     {
-        foreach (User user in users!)
-        {
-            if (user.UserId == taskCard!.AssignedUserId)
-            {
-                assignedUserName = user.UserName;
-                return;
-            }
-        }
-    }
-
-    private List<TaskCard>? AddCardToList(TaskCard newCard)
-    {
-        var existingCardIndex = taskCards!.FindIndex(cards => cards.Index == taskCard!.Index);
-        taskCards[existingCardIndex] = newCard;
-        return taskCards;
+        User? foundUser = Array.Find(users!, element => element.UserId == taskCard!.AssignedUserId);
+        assignedUserName = foundUser!.UserName;
     }
 
     protected override void OnInitialized()
@@ -101,16 +85,16 @@
 
     protected override async Task OnInitializedAsync()
     {
-        //taskCard.BoardId = stateContainer.SelectedBoard!.Id; //is this needed
         users = await Http.GetFromJsonAsync<User[]>("user/get-users");
         taskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/get-task-cards/{stateContainer.SelectedBoard!.Id}");
+        //taskCards = await localStorage.GetItemAsync<List<TaskCard>>($"taskcards/{stateContainer.SelectedBoard!.Id}");
+        taskCard = taskCards![taskCard!.Index!.Value];
         if (taskCard!.AssignedUserId is not null)
-        {
-            var foundUser = await Http.GetFromJsonAsync<User>($"user/{taskCard.AssignedUserId}");
-            assignedUserName = foundUser!.UserName;
-        }
+            AssignUserName();
         else
             assignedUserName = "None";
+        if (taskCard!.EndDate is not null)
+            monthDayStr = $"{taskCard!.EndDate.Value.Day}/{taskCard!.EndDate.Value.Month}/{taskCard!.EndDate.Value.Year}";
     }
 
     protected async Task StoreCalendarDate(DateTime? endDate)
@@ -127,7 +111,18 @@
             return;
         }
         monthDayStr = $"{endDate.Value.Day}/{endDate.Value.Month}/{endDate.Value.Year}";
+        //taskCard.EndDate = endDate;
+        //await AddCardToList(taskCard); //keep if going back to localstorage
     }
+
+    //private async Task<List<TaskCard>> AddCardToList(TaskCard newCard) //keep if going back to localstorage
+    //{
+    //    var existingCardIndex = taskCards!.FindIndex(cards => cards.Index == taskCard!.Index);
+    //    taskCards[existingCardIndex] = newCard;
+    //    await localStorage.SetItemAsync<List<TaskCard>>($"taskcards/{taskCard!.BoardId}", taskCards!);
+    //    taskCards = await localStorage.GetItemAsync<List<TaskCard>>($"taskcards/{stateContainer.SelectedBoard!.Id}");
+    //    return taskCards;
+    //}
 
     public void Dispose()
     {
