@@ -42,4 +42,6 @@ create table board_cards (
 	cardIndex int not null,
 	columnId uniqueidentifier foreign key references board_columns(columnId) not null,
 	boardId uniqueidentifier foreign key references boards(boardId),
+	day int,
+	month int
 );
