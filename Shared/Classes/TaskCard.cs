@@ -27,12 +27,10 @@ namespace trello_clone.Shared.Classes
         public DateTime? DateCreated { get; set; }
         [Column("lastModifiedDate")]
         public DateTime? LastModified { get; set; }
-        [Column("dateEnd")]
-        public DateTime? EndDate { get; set; }
         [NotMapped]
         public string? Status { get; set; }
         [NotMapped]
-        public string? AssignedUserName { get; set; }
+        public string? assignedUserName { get; set; }
 
         public TaskCard() { }
 		public TaskCard(string name, string status)

@@ -109,7 +109,6 @@
             return;
         }
         Snackbar.Add("Successfully registered.", Severity.Success);
-        users = await Http.GetFromJsonAsync<User[]>("user/get-users");
     }
 
     protected async Task Login()
