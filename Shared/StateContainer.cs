@@ -26,12 +26,26 @@ namespace trello_clone.Shared
 
         }
 
+        private TaskCard? _currentCard;
+        public TaskCard? CurrentCard
+        {
+            get => _currentCard;
+            set => _currentCard = value;
+        }
+
         private User? _loggedInUser;
         public User? LoggedInUser
         {
             get => _loggedInUser;
             set => _loggedInUser = value;
         }
+
+        //private TaskCard[]? _currentTaskCards;
+        //public TaskCard[]? CurrentTaskCards
+        //{
+        //    get => _currentTaskCards;
+        //    set => _currentTaskCards = value;
+        //}
         public event Action? OnChange;
 
         private void NotifyStateChanged() => OnChange?.Invoke();

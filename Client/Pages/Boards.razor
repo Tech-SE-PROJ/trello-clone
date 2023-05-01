@@ -7,8 +7,10 @@
 @using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject StateContainer StateContainer
+@inject StateContainer stateContainer
 @implements IDisposable
+@inject IDialogService DialogService
+
 
 <style>
     .add-board {
@@ -27,6 +29,34 @@
 
     <MudButton ButtonType="ButtonType.Submit"  StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Board</MudButton>
 </EditForm>
+
+@*<MudButton @onclick="() => showOverlay = true">ShowOverlay</MudButton>*@
+@*@if(showOverlay)
+{
+    var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    DialogService.Show<CalendarDialog>("Delete", /*parameters,*/ options);
+    <CalendarDialog />
+}*@
+<MudButton @onclick="OpenDialog" Variant="Variant.Filled" Color="Color.Primary">
+    Edit rating
+</MudButton>
+<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+    <DialogContent>
+        <MudText Align="Align.Center" Typo="Typo.h4">Assign a user</MudText>
+        <MudMenu Label="Assign a user" Variant="Variant.Filled" Color="Color.Primary">
+            @foreach (User user in users!)
+            {
+                <MudMenuItem OnClick="@(() => OnClick(user.UserId))">@user.UserName</MudMenuItem>
+            }
+        </MudMenu>
+        <MudText Typo="Typo.h5">Assigned User: @AssignedUser()</MudText>
+        <MudDatePicker Label="Date of Completion" HelperText="@_monthDay?.ToShortDateString()" @bind-Date="_monthDay" OpenTo="OpenTo.Month" FixYear="@DateTime.Today.Year" DateFormat="MM/dd" />
+    </DialogContent>
+    @*    <DialogActions>
+    <MudButton Class="mt-4 d-flex" Style="left: 95px;" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true" @onclick="SaveChanges">Save</MudButton>
+    </DialogActions>*@
+</MudDialog>
 @*<button class="btn btn-primary" type="button" onclick="() => @OpenModal()">show modal</button>*@
 
 @*<MudCard Outlined="true" Style="width: 20%">
@@ -65,11 +95,30 @@
 @code {
     private IEnumerable<Board>? boards;
     private Board newBoard = new Board();
+    private bool showOverlay;//changed
+    private bool visible;
+    private int rating;
+    private void OpenDialog() => visible = true;
+    void Submit() => visible = false;
+    private User[]? users;
+    private string? userWithCardIdName;
+    private DateTime? _monthDay;
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+    private string? assignedUserName;
 
-
+    private async Task OnClick(Guid? id) //first set stateContainer currentCard to the clicked card, then use that cards ID here!!!!
+    {
+        var cardID = Guid.NewGuid();
+        stateContainer.CurrentCard = new TaskCard(id, cardID);
+        await Http.PutAsJsonAsync<TaskCard>($"taskcard/AssignUserToCard/user/{id}", stateContainer.CurrentCard); //not working, 405 error
+        //stateContainer.CurrentCard!.AssignedUserId = id; //!!!!!!!!! Need to set CurrentCardId upon clicking the settings button whenever broxton gets done
+        StateHasChanged();
+    }
     protected override async Task OnInitializedAsync()
     {
-        StateContainer.OnChange += StateHasChanged;
+        users = await Http.GetFromJsonAsync<User[]>("user/get-users");
+
+        stateContainer.OnChange += StateHasChanged;//changed
 
         await GetBoards();
     }
@@ -78,7 +127,7 @@
     {
         boards = await Http.GetFromJsonAsync<Board[]>("Boards/BoardList");
 
-        StateContainer.Boards = boards?.ToList();
+        stateContainer.Boards = boards?.ToList();//changed
     }
 
     private async Task AddBoard()
@@ -89,16 +138,37 @@
 
         newBoard = new Board();
     }
-
+    private string AssignedUser()
+    {
+        //stateContainer.CurrentCard!.AssignedUserId = stateContainer.LoggedInUser!.UserId;
+        //TaskCard task = new TaskCard(assignedUserId: stateContainer.LoggedInUser!.UserId);
+        //stateContainer.CurrentCard = task;
+        if (stateContainer.CurrentCard!.AssignedUserId is not null)
+        {
+            foreach (User user in users!) //get an object null ref error here, why?
+            {
+                if (user.UserId == stateContainer.CurrentCard.AssignedUserId)
+                {
+                    string? assignedUserName = user.UserName;
+                    return assignedUserName;
+                }
+            }
+            return "Unexpected Error!";
+        }
+        else
+        {
+            return "None";
+        }
+    }
     private void BoardClicked(Board clickedBoard)
     {
-        StateContainer.SelectedBoard = clickedBoard;
+        stateContainer.SelectedBoard = clickedBoard;//changed
 
         NavManager.NavigateTo($"boards/{clickedBoard.Name}");
     }
 
     public void Dispose()
     {
-        StateContainer.OnChange -= StateHasChanged;
+        stateContainer.OnChange -= StateHasChanged; //changed 
     }
 }
