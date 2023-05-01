@@ -27,7 +27,7 @@ namespace trello_clone.Shared.Classes
         public DateTime? DateCreated { get; set; }
         [Column("lastModifiedDate")]
         public DateTime? LastModified { get; set; }
-        [Column("endDate")]
+        [Column("dateEnd")]
         public DateTime? EndDate { get; set; }
         [NotMapped]
         public string? Status { get; set; }
