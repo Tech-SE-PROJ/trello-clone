@@ -8,6 +8,7 @@
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject StateContainer StateContainer
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 @implements IDisposable
 
 <style>
@@ -66,27 +67,35 @@
     [Parameter]
     public string? boardName { get; set; }
 
-    public Board Board => StateContainer.SelectedBoard;
+    private Board Board => StateContainer.SelectedBoard; //on refresh, need some way to get an instanced board otherwise the whole thing just breaks and we should ignore it !!!
 
-    public List<Column> Columns => Board.Columns;
+    private List<Column> Columns => Board.Columns;
 
-    public TaskCard newTaskCard = new TaskCard();
+    private TaskCard newTaskCard = new TaskCard();
+
+    private List<TaskCard>? taskCards;
 
     protected override void OnInitialized()
     {
         StateContainer.OnChange += StateHasChanged;
     }
 
-    public async Task AddTaskCard()
+    protected override async Task OnInitializedAsync()
+    {
+        //taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"get-task-cards/{Board.Id}");
+        taskCards = await localStorage.GetItemAsync<List<TaskCard>>($"taskcards/{Board.Id}");
+    }
+
+    private async Task AddTaskCard()
     {
         var columnId = Columns.First().Id;
         var newCardIndex = Columns.First().TaskCards != null ? Columns.First().TaskCards.Count : 0;
-
-        var updatedTaskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"AddTaskCard/{newTaskCard.Name}/{columnId}/{newCardIndex}");
-
-        Columns.First().TaskCards = updatedTaskCards;
+        newTaskCard.BoardId = Board.Id;
+        taskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/AddTaskCard/{newTaskCard.BoardId}/{newTaskCard.Name}/{columnId}/{newCardIndex}"); //want to make this better by not using get
+        //await localStorage.SetItemAsync<List<TaskCard>?>($"{StateContainer.LoggedInUser!.TeamId}", updatedTaskCards); //maybe choose the uri based on boardID instead
+        await localStorage.SetItemAsync<List<TaskCard>>($"taskcards/{Board.Id}", taskCards!);
+        Columns.First().TaskCards = taskCards;
         //await GetBoards();
-
         newTaskCard = new TaskCard();
     }
 
