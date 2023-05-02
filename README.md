@@ -1,13 +1,13 @@
 # trello-clone
 1. Shall create a Trello like website that serves some of the purposes of Trello but for our SE class.
 
-2. Shall have a feature that shows a list of team members. **Shan/Andrew**
+~~2. Shall have a feature that shows a list of team members.~~
 
-3. Shall have a calendar for tracking goals. - **Abraham - may possibly need help to finish in time**
+3. Shall have a calendar for tracking goals.
 
-4. Shall be able to assign cards/events to calendar dates. - **Broxton/Abraham/Andrew**
+~~4. Shall be able to assign cards/events to calendar dates.~~
 
-5. Shall be able to assign team members to cards/events. - **Andrew/Shan**
+~~5. Shall be able to assign team members to cards/events.~~
 
 ~~6. Shall be able to create new cards/events.~~
 
@@ -23,7 +23,7 @@
 
 ~~12. Shall/Will be able to title a board.~~
 
-13. Shall/Will create a panel for titling a board/Assigning team members. - **Someone if time permits**
+~~13. Shall/Will create a panel for titling a board/Assigning team members.~~
 
 ~~14. Shall/Will be able to Delete cards/events.~~
 
