@@ -61,13 +61,31 @@
     }
 
 </div>
+<div class="user-list">
+    @if (users is not null)
+    {
+        <MudGrid Spacing="4" Justify="Justify.Center">
+            <MudItem xs="12">
+               <MudPaper Class="d-flex align-center justify-center py-8" Outlined>
+                   <MudText Align="Align.Center" Typo="Typo.h3">Team Members</MudText>
+               </MudPaper>
+        </MudItem>
 
+        @foreach (User user in users!)
+        {
+            <MudItem>
+                    <MudPaper Height="40px" Width="140px" Class="d-flex align-center justify-center mud-width-full py-8" Outlined>@user.UserName</MudPaper>
+            </MudItem>
+        }
+        </MudGrid>
+    }
+</div>
 @code {
     [Parameter]
     public string? boardName { get; set; }
 
     private Board Board => StateContainer.SelectedBoard; //on refresh, need some way to get an instanced board otherwise the whole thing just breaks and we should ignore it !!!
-
+    private User[]? users;
     private List<Column> Columns => Board.Columns;
 
     private TaskCard newTaskCard = new TaskCard();
@@ -81,6 +99,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        users = await Http.GetFromJsonAsync<User[]>($"user/get-users/{1}"); //replace with teamId later //need to make this wait...
+
         taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{Board.Id}");
         //taskCards = await localStorage.GetItemAsync<List<TaskCard>>($"taskcards/{Board.Id}"); //is not getting EndDate
     }
