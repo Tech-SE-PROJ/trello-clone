@@ -17,9 +17,15 @@ namespace trello_clone.Server.Controllers
         }
 
         [HttpGet("get-users")]
-        public List<User> Get()
+        public List<User> GetUsers()
         {
             return db.users.ToList();
+        }
+
+        [HttpGet("get-users/{teamId}")]
+        public IEnumerable<User> GetUsersByTeam(int teamId)
+        {
+            return db.users.ToList().Where(user => user.TeamId == teamId);
         }
 
         [HttpPost("add-user")]
@@ -37,32 +43,12 @@ namespace trello_clone.Server.Controllers
             }
         }
 
-        //[HttpGet("login")]
-        //public Task<User?>? Login([FromBody] User user)
-        //{
-        //    if (db.users.Any(u => !(u.UserName == user.UserName)) ||
-        //        db.users.Any(u => !(u.UserPassword == user.UserPassword))) //checking if a username/password doesn't exist or match
-        //    {
-        //        return null;
-        //    }
-        //    else
-        //    {
-        //        using (db)
-        //        {
-        //            User? foundUser = db.users
-        //                            .Where(b => b.UserName == $"{user.UserName}")
-        //                            .FirstOrDefault();
-        //            return Task.FromResult(foundUser);
-        //        }
-        //    }
-        //}
-
         [HttpGet("{id}")]
-        public async Task<User?> GetById(Guid id) => await db.users.FindAsync(id); //fix this
+        public async Task<User?> GetById(Guid id) => await db.users.FindAsync(id);
 
         [HttpPut("update/{id}")]
-        public async Task<User?> Put(Guid id, [FromBody] User updatedUser) //to change user fields, create a new GUID and send it here
-        { //tf does this do
+        public async Task<User?> Put(Guid id, [FromBody] User updatedUser)
+        { 
             User? oldUserUpdated = await db.users.FindAsync(id);
             if (oldUserUpdated != null)
             {
