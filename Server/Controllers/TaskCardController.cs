@@ -47,7 +47,7 @@ namespace trello_clone.Server.Controllers
         {
             TaskCard? cardToEdit = await db.board_cards.FindAsync(cardId);
             if (cardToEdit is null)
-                return null;
+                return null; //obviously need to fix this, although it should ALWAYS find a card
             using (db)
             {
                 cardToEdit!.AssignedUserId = userId;
