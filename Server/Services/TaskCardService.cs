@@ -1,11 +1,7 @@
-﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Microsoft.Data.SqlClient;
-using System.Security.Cryptography.Xml;
-using trello_clone.Client.Pages;
+﻿using Microsoft.Data.SqlClient;
 using trello_clone.Server.ExtensionMethods;
 using trello_clone.Server.Interfaces;
 using trello_clone.Shared.Classes;
-using static MudBlazor.CategoryTypes;
 
 namespace trello_clone.Server.Services
 {
@@ -47,14 +43,15 @@ namespace trello_clone.Server.Services
         {
             return new TaskCard();
         }
-        public void AddTaskCard(Guid columnId, string cardName, int cardIndex)
+        public void AddTaskCard(Guid boardId, Guid columnId, string cardName, int cardIndex)
         {
-            string query = $"insert into board_cards(cardId, itemName, cardIndex, columnId, dateCreated, lastModifiedDate) values (@cardId, @itemName, @cardIndex, @columnId, @dateCreated, @lastModifiedDate)";
+            string query = $"insert into board_cards(cardId, itemName, cardIndex, columnId, dateCreated, lastModifiedDate, boardId) values (@cardId, @itemName, @cardIndex, @columnId, @dateCreated, @lastModifiedDate, @boardId)";
             SqlCommand cmd = new SqlCommand(query, _con);
             cmd.Parameters.AddWithValue("@cardId", Guid.NewGuid());
             cmd.Parameters.AddWithValue("@itemName", cardName);
             cmd.Parameters.AddWithValue("@cardIndex", cardIndex);
             cmd.Parameters.AddWithValue("@columnId", columnId);
+            cmd.Parameters.AddWithValue("@boardId", boardId);
             cmd.Parameters.AddWithValue("@dateCreated", DateTime.Now);
             cmd.Parameters.AddWithValue("@lastModifiedDate", DateTime.Now);
 

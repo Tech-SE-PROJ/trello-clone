@@ -8,6 +8,7 @@
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject StateContainer StateContainer
+@inject Blazored.LocalStorage.ILocalStorageService localStorage
 @implements IDisposable
 
 <style>
@@ -50,8 +51,7 @@
             <InputText class="form-control mx-2" @bind-Value="newTaskCard.Name" />
             <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Work Item</MudButton>
         </EditForm>
-    
-
+        <br />
         <div class="column-section">
             @foreach (var column in Columns)
             {
@@ -61,32 +61,59 @@
     }
 
 </div>
+<div class="user-list">
+    @if (users is not null)
+    {
+        <MudGrid Spacing="4" Justify="Justify.Center">
+            <MudItem xs="12">
+               <MudPaper Class="d-flex align-center justify-center py-8" Outlined>
+                   <MudText Align="Align.Center" Typo="Typo.h3">Team Members</MudText>
+               </MudPaper>
+        </MudItem>
 
+        @foreach (User user in users!)
+        {
+            <MudItem>
+                    <MudPaper Height="40px" Width="140px" Class="d-flex align-center justify-center mud-width-full py-8" Outlined>@user.UserName</MudPaper>
+            </MudItem>
+        }
+        </MudGrid>
+    }
+</div>
 @code {
     [Parameter]
     public string? boardName { get; set; }
 
-    public Board Board => StateContainer.SelectedBoard;
+    private Board Board => StateContainer.SelectedBoard; //on refresh, need some way to get an instanced board otherwise the whole thing just breaks and we should ignore it !!!
+    private User[]? users;
+    private List<Column> Columns => Board.Columns;
 
-    public List<Column> Columns => Board.Columns;
+    private TaskCard newTaskCard = new TaskCard();
 
-    public TaskCard newTaskCard = new TaskCard();
+    private List<TaskCard>? taskCards;
 
     protected override void OnInitialized()
     {
         StateContainer.OnChange += StateHasChanged;
     }
 
-    public async Task AddTaskCard()
+    protected override async Task OnInitializedAsync()
+    {
+        users = await Http.GetFromJsonAsync<User[]>($"user/get-users/{1}"); //replace with teamId later //need to make this wait...
+
+        taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{Board.Id}");
+        //taskCards = await localStorage.GetItemAsync<List<TaskCard>>($"taskcards/{Board.Id}"); //is not getting EndDate
+    }
+
+    private async Task AddTaskCard()
     {
         var columnId = Columns.First().Id;
         var newCardIndex = Columns.First().TaskCards != null ? Columns.First().TaskCards.Count : 0;
-
-        var updatedTaskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"AddTaskCard/{newTaskCard.Name}/{columnId}/{newCardIndex}");
-
-        Columns.First().TaskCards = updatedTaskCards;
+        newTaskCard.BoardId = Board.Id;
+        taskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/AddTaskCard/{newTaskCard.BoardId}/{newTaskCard.Name}/{columnId}/{newCardIndex}");
+        //await localStorage.SetItemAsync<List<TaskCard>>($"taskcards/{Board.Id}", taskCards!);
+        Columns.First().TaskCards = taskCards;
         //await GetBoards();
-
         newTaskCard = new TaskCard();
     }
 
