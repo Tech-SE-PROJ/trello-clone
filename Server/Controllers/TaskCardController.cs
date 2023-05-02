@@ -22,7 +22,6 @@ namespace trello_clone.Server.Controllers
             db = DB;
         }
 
-
         [HttpGet("AddTaskCard/{boardId}/{taskCardName}/{columnId}/{cardIndex}")]
         public IEnumerable<TaskCard> AddTaskCard(Guid boardId, string taskCardName, Guid columnId, int cardIndex)
         {
@@ -42,7 +41,7 @@ namespace trello_clone.Server.Controllers
         {
             return db.board_cards.ToList().Where(taskCard => taskCard.BoardId == boardId);
         }
-
+        //try generics if have time
         [HttpPut("AssignUserToCard/user/{userId}")]
         public async Task<TaskCard>? AssignUserToCard([FromBody] Guid cardId, Guid userId) 
         {
@@ -54,7 +53,7 @@ namespace trello_clone.Server.Controllers
                 cardToEdit!.AssignedUserId = userId;
                 await db.SaveChangesAsync();
             }
-            return cardToEdit; //save these changes to localStorage
+            return cardToEdit;
         }
 
         [HttpPut("store-date/{cardId}")]
