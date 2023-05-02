@@ -6,7 +6,7 @@ namespace trello_clone.Server.Interfaces
     {
         public IEnumerable<TaskCard> GetTaskCards(Guid columnId);
         public TaskCard GetTaskCard(Guid cardId);
-        public void AddTaskCard(Guid columnId, string taskName, int cardIndex);
+        public void AddTaskCard(Guid boardId, Guid columnId, string taskName, int cardIndex);
         public void UpdateTaskCard();
         public void DeleteTaskCard();
     }

@@ -1,17 +1,18 @@
 ﻿@using trello_clone.Shared
+@using trello_clone.Shared.Classes
 @inherits LayoutComponentBase
 @inject StateContainer stateContainer
 @inject NavigationManager _navigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
-<MudThemeProvider />
-<MudSnackbarProvider />
+<MudThemeProvider/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-
         @if (stateContainer.LoggedInUser is not null)
         {
             <div class="top-row px-4">
@@ -46,3 +47,11 @@
         }
     </main>
 </div>
+
+@code{
+    protected override async Task OnInitializedAsync()
+    {
+        stateContainer.LoggedInUser = await localStorage.GetItemAsync<User>("login");
+        //need to load the board page as well here
+    }
+}

@@ -7,5 +7,6 @@ namespace trello_clone.Server
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
         public DbSet<Shared.Classes.User> users { get; set; }
+        public DbSet<Shared.Classes.TaskCard> board_cards { get; set; }
     }
 }
