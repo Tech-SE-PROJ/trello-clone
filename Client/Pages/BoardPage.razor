@@ -34,7 +34,8 @@
     .add-taskcard {
         display: flex;
         flex-direction: row;
-        width: 33%;
+        min-width: 33%;
+        width: fit-content;
     }
 </style>
 
@@ -45,7 +46,7 @@
     }
     else
     {
-        <h1>@SelectedBoard.Name</h1>
+        <h1>@SelectedBoard.Name <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" @onclick="OpenCardSettings"></MudIconButton></h1>
 
         <EditForm class="add-taskcard" Model="newTaskCard" OnValidSubmit="AddTaskCard">
             <InputText class="form-control mx-2" @bind-Value="newTaskCard.Name" />
@@ -56,6 +57,7 @@
             @foreach (var column in Columns)
             {
                 <ColumnComponent Column="@column" 
+                    OnDeleteColumn="DeleteColumn"
                     OnCardDragStart="OnCardDragStart" 
                     OnCardDragEnd="OnCardDragEnd" 
                     OnDragEnterColumn="OnCardDragEnterColumn"
@@ -87,6 +89,19 @@
         </MudGrid>
     }
 </div>
+
+<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+    <DialogContent>
+        <MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
+        <EditForm class="add-taskcard" Model="newColumn" OnValidSubmit="AddColumn">
+            <InputText class="form-control mx-2" @bind-Value="newColumn.Name" />
+            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Column</MudButton>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter]
     public string? boardName { get; set; }
@@ -96,6 +111,8 @@
     private User[]? users;
 
     public List<Column> Columns => SelectedBoard.Columns ?? new List<Column>();
+
+    private Column newColumn = new Column();
 
     private TaskCard newTaskCard = new TaskCard();
 
@@ -111,6 +128,12 @@
 
     private Guid? finalColumnId;
 
+    private bool visible = false;
+
+    DialogOptions dialogOptions = new() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+    protected void OpenCardSettings() => visible = true;
+
     protected override void OnInitialized()
     {
         StateContainer.OnChange += StateHasChanged;
@@ -123,17 +146,41 @@
         taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{SelectedBoard.Id}");
     }
 
+    private async Task DeleteColumn(Guid columnId)
+    {
+        await Http.GetAsync($"column/DeleteColumn/{columnId}");
+
+        var columnToRemove = SelectedBoard.Columns.FirstOrDefault(column => column.Id == columnId);
+
+        SelectedBoard.Columns.Remove(columnToRemove);
+
+        Task.Run(() => SaveChanges());
+    }
+
     private async Task AddTaskCard()
     {
         var columnId = Columns.First().Id;
         var newCardIndex = Columns.First().TaskCards != null ? Columns.First().TaskCards.Count : 0;
         newTaskCard.BoardId = SelectedBoard.Id;
-        
+
         var updatedTaskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/AddTaskCard/{newTaskCard.BoardId}/{newTaskCard.Name}/{columnId}/{newCardIndex}");
 
         Columns.First().TaskCards = updatedTaskCards;
 
         newTaskCard = new TaskCard();
+    }
+
+    private async Task AddColumn()
+    {
+        var columnIndex = Columns.Count;
+
+        var updatedColumn = await Http.GetFromJsonAsync<Column>($"column/AddColumn/{SelectedBoard.Id}/{newColumn.Name}/{columnIndex}");
+
+        SelectedBoard.Columns.Add(updatedColumn);
+
+        visible = false;
+
+        newColumn = new Column();
     }
 
     #region DragDrop
