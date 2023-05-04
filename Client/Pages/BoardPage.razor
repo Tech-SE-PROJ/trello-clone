@@ -39,13 +39,13 @@
 </style>
 
 <div class="board-container">
-    @if (Board == null)
+    @if (SelectedBoard == null)
     {
         <p>... Loading</p>
     }
     else
     {
-        <h1>@Board.Name</h1>
+        <h1>@SelectedBoard.Name</h1>
 
         <EditForm class="add-taskcard" Model="newTaskCard" OnValidSubmit="AddTaskCard">
             <InputText class="form-control mx-2" @bind-Value="newTaskCard.Name" />
@@ -55,7 +55,14 @@
         <div class="column-section">
             @foreach (var column in Columns)
             {
-                <ColumnComponent Column="@column" />
+                <ColumnComponent Column="@column" 
+                    OnCardDragStart="OnCardDragStart" 
+                    OnCardDragEnd="OnCardDragEnd" 
+                    OnDragEnterColumn="OnCardDragEnterColumn"
+                    OnCardDragEnter="OnCardDragEnter" 
+                    OnCardDragEnterBottom="OnCardDragEnterBottom" 
+                    OnCardDropBottom="OnCardDropBottom" 
+                    OnCardDropOver="OnCardDropOver"/>
             }
         </div>
     }
@@ -84,13 +91,25 @@
     [Parameter]
     public string? boardName { get; set; }
 
-    private Board Board => StateContainer.SelectedBoard; //on refresh, need some way to get an instanced board otherwise the whole thing just breaks and we should ignore it !!!
+    private Board SelectedBoard => StateContainer.SelectedBoard;
+
     private User[]? users;
-    private List<Column> Columns => Board.Columns;
+
+    public List<Column> Columns => SelectedBoard.Columns ?? new List<Column>();
 
     private TaskCard newTaskCard = new TaskCard();
 
     private List<TaskCard>? taskCards;
+
+    private TaskCard? DraggedCard;
+
+    private TaskCard? DragEnter;
+
+    private int DraggedItemIndex;
+
+    private Guid? initialColumnId;
+
+    private Guid? finalColumnId;
 
     protected override void OnInitialized()
     {
@@ -101,24 +120,100 @@
     {
         users = await Http.GetFromJsonAsync<User[]>($"user/get-users/{1}"); //replace with teamId later //need to make this wait...
 
-        taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{Board.Id}");
-        //taskCards = await localStorage.GetItemAsync<List<TaskCard>>($"taskcards/{Board.Id}"); //is not getting EndDate
+        taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{SelectedBoard.Id}");
     }
 
     private async Task AddTaskCard()
     {
         var columnId = Columns.First().Id;
         var newCardIndex = Columns.First().TaskCards != null ? Columns.First().TaskCards.Count : 0;
-        newTaskCard.BoardId = Board.Id;
-        taskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/AddTaskCard/{newTaskCard.BoardId}/{newTaskCard.Name}/{columnId}/{newCardIndex}");
-        //await localStorage.SetItemAsync<List<TaskCard>>($"taskcards/{Board.Id}", taskCards!);
-        Columns.First().TaskCards = taskCards;
-        //await GetBoards();
+        newTaskCard.BoardId = SelectedBoard.Id;
+        
+        var updatedTaskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/AddTaskCard/{newTaskCard.BoardId}/{newTaskCard.Name}/{columnId}/{newCardIndex}");
+
+        Columns.First().TaskCards = updatedTaskCards;
+
         newTaskCard = new TaskCard();
+    }
+
+    #region DragDrop
+
+    public void OnCardDragEnterColumn(Guid columnId)
+    {
+        finalColumnId = columnId;
+    }
+
+    public void OnCardDragStart(TaskCard taskCard)
+    {
+        DraggedCard = taskCard;
+        initialColumnId = taskCard.ColumnId;
+        DraggedItemIndex = Columns.FirstOrDefault(col => col.Id == initialColumnId).TaskCards.IndexOf(taskCard);
+    }
+
+    public void OnCardDragEnd()
+    {
+        if (DraggedCard == null) return;
+
+        DraggedCard.ColumnId = finalColumnId;
+
+        Columns.FirstOrDefault(col => col.Id == initialColumnId)?.TaskCards?.Remove(DraggedCard);
+
+        if (finalColumnId != initialColumnId) Columns.FirstOrDefault(col => col.Id == finalColumnId)?.TaskCards?.Add(DraggedCard);
+        else Columns.FirstOrDefault(col => col.Id == finalColumnId)?.TaskCards?.Insert(DraggedItemIndex, DraggedCard);
+
+        DragEnter = null;
+
+        Task.Run(() => SaveChanges());
+    }
+
+    public void OnCardDropOver(TaskCard cardDroppedOn)
+    {
+        DragEnter = null;
+        if (DraggedCard == null) return;
+        if (DraggedCard == cardDroppedOn) return;
+
+        DraggedCard.ColumnId = finalColumnId;
+        Columns.FirstOrDefault(col => col.Id == initialColumnId)?.TaskCards?.Remove(DraggedCard);
+        var cardDroppedOnIndex = Columns.FirstOrDefault(col => col.Id == finalColumnId).TaskCards.IndexOf(cardDroppedOn);
+        Columns.FirstOrDefault(col => col.Id == finalColumnId)?.TaskCards?.Insert(cardDroppedOnIndex, DraggedCard);
+        DraggedCard = null;
+
+        Task.Run(() => SaveChanges());
+    }
+
+    public void OnCardDropBottom()
+    {
+        DragEnter = null;
+        if (DraggedCard == null) return;
+
+        DraggedCard.ColumnId = finalColumnId;
+        Columns.FirstOrDefault(col => col.Id == initialColumnId).TaskCards.Remove(DraggedCard);
+        Columns.FirstOrDefault(col => col.Id == finalColumnId).TaskCards.Add(DraggedCard);
+        DraggedCard = null;
+
+        Task.Run(() => SaveChanges());
+    }
+
+    public void OnCardDragEnter(TaskCard enteredCard)
+    {
+        DragEnter = enteredCard;
+    }
+
+    public void OnCardDragEnterBottom()
+    {
+        DragEnter = null;
+    }
+
+    #endregion
+
+    public async Task SaveChanges()
+    {
+        var response = await Http.PostAsJsonAsync<Board>($"boards/UpdateBoard", SelectedBoard);
     }
 
     public void Dispose()
     {
+        Task.Run(() => SaveChanges());
         StateContainer.OnChange -= StateHasChanged;
     }
 }

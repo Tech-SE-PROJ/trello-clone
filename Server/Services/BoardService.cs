@@ -8,6 +8,7 @@ using trello_clone.Server.Interfaces;
 using trello_clone.Server;
 using Microsoft.Data.SqlClient;
 using System.Security.Principal;
+using trello_clone.Client.Pages;
 
 namespace trello_clone.Server.Services
 {
@@ -68,9 +69,22 @@ namespace trello_clone.Server.Services
             _columnService.AddBasicColumns(boardId);
         }
 
-        public void UpdateBoard()
+        public void UpdateBoard(Board board)
         {
+            _con.Open();
+            using (SqlTransaction trans = _con.BeginTransaction())
+            {
+                using (SqlCommand cmd = _con.CreateCommand())
+                {
+                    cmd.Transaction = trans;
+                    cmd.CommandText = @"update boards set boardName = @boardName where boardId=@boardId";
+                    cmd.Parameters.AddWithValue("@boardId", board.Id);
+                    cmd.Parameters.AddWithValue("@boardName", board.Name);
+                }
+            }
+            _con.Close();
 
+            _columnService.UpdateColumns(board.Columns);
         }
 
         public void DeleteBoard()

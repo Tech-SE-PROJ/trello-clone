@@ -20,28 +20,44 @@
         align-items: center;
     }
 
+    .dragging {
+        cursor: grabbing;
+    }
+
+    .inserting {
+        border-top: 1px solid black;
+        margin-top: 5px;
+    }
+
     .container {
 
     }
 </style>
 
 
-<div class="column">
+<div class="column" ondragover="event.preventDefault()" 
+    @ondragenter="@(() => OnDragEnterColumn.InvokeAsync(Column.Id))"
+     @ondrop="@(() => OnDropBottom())">
     <h3>@Column?.Name</h3>
 
-    <div class="tasks">
-        @if (Column.TaskCards == null)
+    <ul class="tasks" ondragover="event.preventDefault()" >
+        @foreach (var taskCard in TaskCards)
         {
-            <p>Empty</p>
+            <li draggable="true" 
+                class="@(DragEnter==taskCard?"inserting":"")" 
+                @key=@taskCard.Id id="@taskCard.Id" 
+                ondragover="event.preventDefault();"
+                @ondragstart="@( (e) => OnDragStart(e, taskCard))" 
+                @ondrop="@( () => HandleDropOver(taskCard))" 
+                @ondragenter="@( ()=> OnDragEnter(taskCard) )"
+                @ondragend="@( ()=> OnDragEnd() )"
+            ><TaskCardComponent TaskCard="@taskCard" /></li>
         }
-        else
-        {
-            @foreach (var taskCard in Column.TaskCards)
-            {
-                <TaskCardComponent taskCard="@taskCard" />
-            }
-        }
-    </div>
+        <div style="height: 1.5em;"
+            ondragover="event.preventDefault();"
+            @ondrop="@(() => OnDropBottom())"
+            @ondragenter="OnDragEnterBottom" />
+    </ul>
 
     
 </div>
@@ -52,12 +68,77 @@
     [Parameter]
     public Column? Column { get; set; }
 
+    [Parameter]
+    public EventCallback<TaskCard> OnCardDragStart { get; set; }
+
+    [Parameter]
+    public EventCallback OnCardDragEnd { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnDragEnterColumn { get; set; }
+
+    [Parameter]
+    public EventCallback<TaskCard> OnCardDropOver { get; set; }
+
+    [Parameter]
+    public EventCallback<TaskCard> OnCardDropBottom { get; set; }
+
+    [Parameter]
+    public EventCallback<TaskCard> OnCardDragEnter { get; set; }
+
+    [Parameter]
+    public EventCallback OnCardDragEnterBottom { get; set; }
+
+    public List<TaskCard> TaskCards => Column?.TaskCards ?? new List<TaskCard>();
+
+    private TaskCard? DraggedCard;
+    private int DraggedItemPosition;
+    private TaskCard? DragEnter;
+
     protected override void OnInitialized()
     {
         StateContainer.OnChange += StateHasChanged;
 
-        
+
     }
+
+    public void HandleDropOver(TaskCard taskCard)
+    {
+        DragEnter = null;
+        OnCardDropOver.InvokeAsync(taskCard);
+    }
+
+    public void OnDropBottom()
+    {
+        DragEnter = null;
+        OnCardDropBottom.InvokeAsync();
+    }
+
+    public void OnDragStart(DragEventArgs e, TaskCard taskCard)
+    {
+        e.DataTransfer.EffectAllowed = "move"; 
+        OnCardDragStart.InvokeAsync(taskCard);
+    }
+
+    public void OnDragEnter(TaskCard taskCard)
+    {
+        DragEnter = taskCard;
+        OnCardDragEnter.InvokeAsync(taskCard);
+    }
+
+    public void OnDragEnterBottom()
+    {
+        DragEnter = null;
+        OnCardDragEnterBottom.InvokeAsync();
+    }
+
+    public void OnDragEnd()
+    {
+        DragEnter = null;
+        OnCardDragEnd.InvokeAsync();
+    }
+    
+
 
     public void Dispose()
     {

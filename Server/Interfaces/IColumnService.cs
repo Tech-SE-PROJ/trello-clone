@@ -8,7 +8,8 @@ namespace trello_clone.Server.Interfaces
         public Column GetColumn();
         public void AddColumn(Guid boardId, string columnName, int columnIndex);
         public void AddBasicColumns(Guid boardId);
-        public void UpdateColumn();
+        public void UpdateColumn(Column column);
+        public void UpdateColumns(List<Column> columns);
         public void DeleteColumn();
     }
 }
