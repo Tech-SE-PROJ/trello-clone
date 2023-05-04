@@ -23,7 +23,7 @@ namespace trello_clone.Server.Controllers
         }
 
         [HttpGet("AddTaskCard/{boardId}/{taskCardName}/{columnId}/{cardIndex}")]
-        public IEnumerable<TaskCard> AddTaskCard(Guid boardId, string taskCardName, Guid columnId, int cardIndex)
+        public List<TaskCard> AddTaskCard(Guid boardId, string taskCardName, Guid columnId, int cardIndex)
         {
             _taskCardService.AddTaskCard(boardId, columnId, taskCardName, cardIndex);
 

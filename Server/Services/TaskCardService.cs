@@ -8,7 +8,7 @@ namespace trello_clone.Server.Services
     public class TaskCardService : ITaskCardService
     {
         private SqlConnection _con = LocalServerConnection.Connection;
-        public IEnumerable<TaskCard> GetTaskCards(Guid columnId)
+        public List<TaskCard> GetTaskCards(Guid columnId)
         {
             var taskCards = new List<TaskCard>();
 
@@ -64,6 +64,38 @@ namespace trello_clone.Server.Services
         {
 
         }
+
+        public void UpdateColumnTaskCards(List<Column> columns)
+        {
+            _con.Open();
+            using (SqlTransaction trans = _con.BeginTransaction())
+            {
+                foreach (Column column in columns)
+                {
+                    foreach (TaskCard taskCard in column.TaskCards)
+                    {
+                        int newIndex = column.TaskCards.IndexOf(taskCard);
+                        
+                        using (SqlCommand cmd = _con.CreateCommand())
+                        {
+                            cmd.Transaction = trans;
+                            cmd.CommandText = @"update board_cards set itemName=@itemName, lastModifiedDate=@lastModifiedDate, cardIndex=@cardIndex, columnId=@columnId where cardId=@cardId";
+                            
+                            cmd.Parameters.AddWithValue("@itemName", taskCard.Name);
+                            cmd.Parameters.AddWithValue("@lastModifiedDate", DateTime.Now);
+                            cmd.Parameters.AddWithValue("@cardIndex", newIndex);
+                            cmd.Parameters.AddWithValue("@columnId", column.Id);
+                            cmd.Parameters.AddWithValue("@cardId", taskCard.Id);
+
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+                trans.Commit();
+            }
+            _con.Close();
+        }
+
         public void DeleteTaskCard()
         {
 

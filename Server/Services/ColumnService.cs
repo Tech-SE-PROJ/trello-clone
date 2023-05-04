@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using trello_clone.Client.Pages;
 using trello_clone.Server.Interfaces;
 using trello_clone.Shared.Classes;
 
@@ -81,9 +82,34 @@ namespace trello_clone.Server.Services
             }
             _con.Close();
         }
-        public void UpdateColumn()
+        public void UpdateColumn(Column column)
         {
 
+        }
+
+        public void UpdateColumns(List<Column> columns)
+        {
+            _con.Open();
+            using (SqlTransaction trans = _con.BeginTransaction())
+            {
+                foreach (Column column in columns)
+                {
+                    using (SqlCommand cmd = _con.CreateCommand())
+                    {
+                        cmd.Transaction = trans;
+                        cmd.CommandText = @"update board_columns set columnName=@columnName, columnIndex=@columnIndex where columnId=@columnId";
+                        cmd.Parameters.AddWithValue("@columnId", column.Id);
+                        cmd.Parameters.AddWithValue("@columnName", column.Name);
+                        cmd.Parameters.AddWithValue("@columnIndex", column.Index);
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                trans.Commit();
+            }
+            _con.Close();
+
+            _taskCardService.UpdateColumnTaskCards(columns);
         }
 
         public void DeleteColumn()
