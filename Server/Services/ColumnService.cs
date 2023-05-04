@@ -1,5 +1,6 @@
 ﻿using Microsoft.Data.SqlClient;
 using trello_clone.Client.Pages;
+using trello_clone.Server.ExtensionMethods;
 using trello_clone.Server.Interfaces;
 using trello_clone.Shared.Classes;
 
@@ -38,17 +39,39 @@ namespace trello_clone.Server.Services
 
             return columns;
         }
-        public Column GetColumn()
+        public Column GetColumn(Guid columnId)
         {
-            return new Column();
+            var column = new Column();
+
+            _con.Open();
+            SqlCommand cmd = _con.CreateCommand();
+            cmd.CommandText = @"Select * from board_columns where columnId = @columnId order by columnIndex";
+            cmd.Parameters.AddWithValue("@columnId", columnId);
+
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            while (dr.Read())
+            {
+                column.Id = columnId;
+                column.Name = dr.GetSafeString("columnName");
+                column.Index = dr.GetSafeInt("columnIndex").Value;
+                column.BoardId = dr.GetSafeGuid("columnId").Value;
+            }
+
+            _con.Close();
+
+            column.TaskCards = _taskCardService.GetTaskCards(columnId);
+
+            return column;
         }
-        public void AddColumn(Guid boardId, string columnName, int columnIndex)
+        public void AddColumn(Guid boardId, Guid columnId, string columnName, int columnIndex)
         {
-            string query = $"insert into board_columns (columnName, columnIndex, boardId) values (@columnName, @columnIndex, @boardId)";
+            string query = $"insert into board_columns (columnId, columnName, columnIndex, boardId) values (@columnId, @columnName, @columnIndex, @boardId)";
             SqlCommand cmd = new SqlCommand(query, _con);
             cmd.Parameters.AddWithValue("@columnName", columnName);
             cmd.Parameters.AddWithValue("@columnIndex", columnIndex);
             cmd.Parameters.AddWithValue("@boardId", boardId);
+            cmd.Parameters.AddWithValue("columnId", columnId);
 
             _con.Open();
             cmd.ExecuteNonQuery();
@@ -112,9 +135,22 @@ namespace trello_clone.Server.Services
             _taskCardService.UpdateColumnTaskCards(columns);
         }
 
-        public void DeleteColumn()
+        public void DeleteColumn(Guid columnId)
         {
+            _con.Open();
+            using (SqlTransaction trans = _con.BeginTransaction())
+            {
+                using (SqlCommand cmd = _con.CreateCommand())
+                {
+                    cmd.Transaction = trans;
+                    cmd.CommandText = @"delete from board_columns where columnId=@columnId";
+                    cmd.Parameters.AddWithValue("@columnId", columnId);
 
+                    cmd.ExecuteNonQuery();
+                }
+                trans.Commit();
+            }
+            _con.Close();
         }
     }
 }

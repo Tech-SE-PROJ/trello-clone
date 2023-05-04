@@ -2,6 +2,7 @@
 @using trello_clone.Shared
 @using trello_clone.Shared.Classes
 @implements IDisposable
+@inject HttpClient Http
 @inject StateContainer StateContainer
 
 <style>
@@ -38,7 +39,7 @@
 <div class="column" ondragover="event.preventDefault()" 
     @ondragenter="@(() => OnDragEnterColumn.InvokeAsync(Column.Id))"
      @ondrop="@(() => OnDropBottom())">
-    <h3>@Column?.Name</h3>
+    <h3>@Column?.Name <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" @onclick="OpenCardSettings"></MudIconButton></h3>
 
     <ul class="tasks" ondragover="event.preventDefault()" >
         @foreach (var taskCard in TaskCards)
@@ -62,11 +63,34 @@
     
 </div>
 
+<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+    <DialogContent>
+        <MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
+        <MudButton OnClick="ToggleDeleteConfirm">Delete Column <MudIcon Icon="@Icons.Material.Filled.Delete"></MudIcon></MudButton>
+    </DialogContent>
+    <DialogActions>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-IsVisible="deleteVisible" Options="deleteOptions">
+    <DialogContent>
+        <MudText Align="Align.Center" Typo="Typo.h4">Delete Column "@Column.Name"?</MudText>
+        <div >
+            <MudButton OnClick="DeleteColumn" >Confirm</MudButton>
+            <MudButton OnClick="ToggleDeleteConfirm">Cancel</MudButton>
+        </div>
+    </DialogContent>
+    <DialogActions>
+    </DialogActions>
+</MudDialog>
 
 @code {
 
     [Parameter]
     public Column? Column { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnDeleteColumn { get; set; }
 
     [Parameter]
     public EventCallback<TaskCard> OnCardDragStart { get; set; }
@@ -94,12 +118,29 @@
     private TaskCard? DraggedCard;
     private int DraggedItemPosition;
     private TaskCard? DragEnter;
+    private bool visible = false;
+    private bool deleteVisible = false;
+
+    DialogOptions dialogOptions = new() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+    DialogOptions deleteOptions = new() { CloseButton = true, MaxWidth = MaxWidth.Small };
+
+    protected void OpenCardSettings() => visible = true;
 
     protected override void OnInitialized()
     {
         StateContainer.OnChange += StateHasChanged;
 
 
+    }
+
+    private void ToggleDeleteConfirm() => deleteVisible = !deleteVisible;
+
+    private void DeleteColumn()
+    {
+        deleteVisible = false;
+        visible = false;
+        OnDeleteColumn.InvokeAsync(Column.Id);
     }
 
     public void HandleDropOver(TaskCard taskCard)
