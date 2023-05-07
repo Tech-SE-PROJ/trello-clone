@@ -1,11 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using trello_clone.Client.Components;
-using trello_clone.Client.Pages;
+﻿using Microsoft.AspNetCore.Mvc;
 using trello_clone.Server.Interfaces;
 using trello_clone.Server.Services;
-using trello_clone.Shared;
 using trello_clone.Shared.Classes;
 
 namespace trello_clone.Server.Controllers
@@ -41,13 +36,13 @@ namespace trello_clone.Server.Controllers
         {
             return db.board_cards.ToList().Where(taskCard => taskCard.BoardId == boardId);
         }
-        //try generics if have time
+
         [HttpPut("AssignUserToCard/user/{userId}")]
         public async Task<TaskCard>? AssignUserToCard([FromBody] Guid cardId, Guid userId) 
         {
             TaskCard? cardToEdit = await db.board_cards.FindAsync(cardId);
             if (cardToEdit is null)
-                return null; //obviously need to fix this, although it should ALWAYS find a card
+                return null!;
             using (db)
             {
                 cardToEdit!.AssignedUserId = userId;
