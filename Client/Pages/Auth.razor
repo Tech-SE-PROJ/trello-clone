@@ -4,6 +4,7 @@
 @using Microsoft.AspNetCore.Components
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
+@using trello_clone.Client.Components
 @inject HttpClient Http
 @inject NavigationManager _navigationManager
 @inject StateContainer stateContainer
@@ -23,7 +24,6 @@
                               Validation="@(new Func<string, IEnumerable<string>>(PasswordStrength))" Required="true"
                               RequiredError="Password is required!" />
                 <MudTextField @bind-Value="registerEmail" T="string" Label="Email" Required="true" RequiredError="Email is required!" />
-                <MudTextField @bind-Value="registerTeamId" T="int" Label="Team ID" Required="true" RequiredError="Team ID is required!" />
                 <MudButton Class="mt-4 d-flex" Style="left: 95px;" Variant="Variant.Filled" Color="Color.Primary" DisableElevation="true" @onclick="AddUser">Register</MudButton>
             </MudForm>
         </MudPaper>
@@ -42,24 +42,77 @@
         </MudPaper>
     </MudItem>
 </MudGrid>
+<div class="d-flex flex-column align-center">
+    @if (stateContainer.LoggedInUser is not null)
+    {
+        <MudButton @onclick="OpenDialog" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">Open Team Select</MudButton>
+    }
+</div>
+<MudDialog @bind-IsVisible="isVisible" Options="dialogOptions">
+    <DialogContent>
+        @if (teams is not null)
+        {
+            <MudChipSet @bind-SelectedChip="selectedChip" Filter="checkmark" Mandatory="true">
+                @foreach (Team team in teams!)
+                {
+                    <MudChip Text="@team.TeamName" @onclick="(() => ChipClicked(team))" Variant="Variant.Outlined" Color="Color.Primary"></MudChip>
+                }
+            </MudChipSet>
+        }
+        <div class="d-flex flex-column align-center">
+            @if (selectedChip != null)
+            {
+                <MudText>@selectedChip.Text was added.</MudText>
+            }
+        </div>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Class="px-10">Save</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="SubmitNested" Class="px-10">Add Team</MudButton>
+    </DialogActions>
+</MudDialog>
 
+<MudDialog @bind-IsVisible="isVisible2" @ref="nestedDialog">
+    <DialogContent>
+        <MudTextField T="string" AutoFocus="true" Placeholder="Enter a name" @bind-Value="teamName"></MudTextField>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddNewTeam" Class="px-10">Save</MudButton>
+    </DialogActions>
+</MudDialog>
 @code {
     bool success = false;
+    bool checkmark = true;
     string[] errors1 = { }; 
     string[] errors2 = { };
     MudTextField<string>? pwField1 = null!;
     MudTextField<string>? pwField2 = null!;
+    MudChip selectedChip;
     MudForm form1 { get; set; } = null!;
     MudForm form2 { get; set; } = null!;
+    MudDialog nestedDialog = null!;
     string registerName { get; set; } = null!;
     string registerPass { get; set; } = null!;
     string registerEmail { get; set; } = null!;
-    int registerTeamId { get; set; }
     string loginName { get; set; } = null!;
     string loginPass { get; set; } = null!;
-    Salting salt = new();
-
+    string teamName = "";
+    private List<Team>? teams;
     private User[]? users;
+    private List<Team>? usersTeams;
+    Salting salt = new();
+    private bool isVisible, isVisible2;
+    private void OpenDialog() => isVisible = true;
+    private void Submit() => isVisible = false;
+    private void SubmitNested() => isVisible2 = true;
+    private DialogOptions dialogOptions = new() { FullWidth = true };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await Http.GetFromJsonAsync<User[]>("user/get-users");
+        teams = await Http.GetFromJsonAsync<List<Team>>($"team/get-teams");
+    }
 
     private IEnumerable<string> PasswordStrength(string pw)
     {
@@ -78,16 +131,34 @@
             yield return "Password must contain at least one digit";
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task ChipClicked(Team team)
     {
-        //await base.OnInitializedAsync();
-        users = await Http.GetFromJsonAsync<User[]>("user/get-users");
+        bool entryExists = await Http.GetFromJsonAsync<bool>($"usersteams/exists/{stateContainer.LoggedInUser!.UserId}/{team.TeamId}");
+        if (entryExists)
+        {
+            Snackbar.Add($"You are already assigned to {team.TeamName}.", Severity.Error);
+            return;
+        }
+        UsersTeams usersTeams = new() { UserId = stateContainer.LoggedInUser!.UserId, TeamId = team.TeamId };
+        var res = await Http.PostAsJsonAsync<UsersTeams>("UsersTeams/add-userteams", usersTeams);
+        string content = await res.Content.ReadAsStringAsync();
     }
 
-    protected async Task AddUser()
+    private async Task AddNewTeam()
+    {
+        Team team = new() { TeamId = Guid.NewGuid(), TeamName = teamName };
+        var res = await Http.PostAsJsonAsync<Team>("team/add-team", team);
+        string content = await res.Content.ReadAsStringAsync();
+        await Http.GetAsync($"Boards/Addboard/{teamName}");
+        teamName = "";
+        teams = await Http.GetFromJsonAsync<List<Team>>($"team/get-teams");
+        nestedDialog.Close();
+    }
+
+    private async Task AddUser()
     {
         string hashedPass = salt.HashPassword(registerPass, out var salted);
-        User user = new User { UserId = Guid.NewGuid(), UserEmail = registerEmail, UserName = registerName, UserPassword = hashedPass, TeamId = registerTeamId, FirstName = "a", JobTitle = "a", LastName = "a" };
+        User user = new User { UserId = Guid.NewGuid(), UserEmail = registerEmail, UserName = registerName, UserPassword = hashedPass, FirstName = "a", JobTitle = "a", LastName = "a" };
         try
         {
             var res = await Http.PostAsJsonAsync("user/add-user", user);
@@ -112,7 +183,7 @@
         users = await Http.GetFromJsonAsync<User[]>("user/get-users");
     }
 
-    protected async Task Login()
+    private async Task Login()
     {
         string hashedPass = salt.HashPassword(loginPass, out var entropy); //entropy makes each hashed password more random
         bool isVerified = salt.VerifyPassword(loginPass, hashedPass, entropy); 
@@ -122,7 +193,7 @@
             {
                 stateContainer.LoggedInUser = user;
                 await localStorage.SetItemAsync<User>("login", user);
-                stateContainer.LoggedInUser = await localStorage.GetItemAsync<User>("login"); //probably pointless
+                stateContainer.LoggedInUser = await localStorage.GetItemAsync<User>("login");
                 _navigationManager.NavigateTo("/");
                 return;
             }
