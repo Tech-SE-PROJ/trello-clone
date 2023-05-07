@@ -1,9 +1,9 @@
 # trello-clone
-1. Shall create a Trello like website that serves some of the purposes of Trello but for our SE class.
+~~1. Shall create a Trello like website that serves some of the purposes of Trello but for our SE class.~~
 
 ~~2. Shall have a feature that shows a list of team members.~~
 
-3. Shall have a calendar for tracking goals.
+~~3. Shall have a calendar for tracking goals.~~
 
 ~~4. Shall be able to assign cards/events to calendar dates.~~
 
@@ -11,7 +11,7 @@
 
 ~~6. Shall be able to create new cards/events.~~
 
-7. Shall have drag and drop features for cards.w - **Broxton**
+~~7. Shall have drag and drop features for cards.~~
 
 ~~8. Shall have a login feature/system.~~
 
