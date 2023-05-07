@@ -71,23 +71,19 @@
 
 </div>
 <div class="user-list">
-    @if (users is not null)
-    {
-        <MudGrid Spacing="4" Justify="Justify.Center">
-            <MudItem xs="12">
-               <MudPaper Class="d-flex align-center justify-center py-8" Outlined>
-                   <MudText Align="Align.Center" Typo="Typo.h3">Team Members</MudText>
-               </MudPaper>
+    <MudGrid Spacing="4" Justify="Justify.Center">
+        <MudItem xs="12">
+            <MudPaper Class="d-flex align-center justify-center py-8" Outlined>
+                <MudText Align="Align.Center" Typo="Typo.h3">Team Members</MudText>
+            </MudPaper>
         </MudItem>
-
         @foreach (User user in users!)
         {
             <MudItem>
-                    <MudPaper Height="40px" Width="140px" Class="d-flex align-center justify-center mud-width-full py-8" Outlined>@user.UserName</MudPaper>
+                <MudPaper Height="40px" Width="140px" Class="d-flex align-center justify-center mud-width-full py-8" Outlined>@user.UserName</MudPaper>
             </MudItem>
         }
-        </MudGrid>
-    }
+    </MudGrid>
 </div>
 
 <MudDialog @bind-IsVisible="visible" Options="dialogOptions">
@@ -105,7 +101,9 @@
 @code {
     [Parameter]
     public string? boardName { get; set; }
-
+    
+    private Team? currentTeam;
+    
     private Board SelectedBoard => StateContainer.SelectedBoard;
 
     private User[]? users;
@@ -141,9 +139,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        users = await Http.GetFromJsonAsync<User[]>($"user/get-users/{1}"); //replace with teamId later //need to make this wait...
-
-        taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{SelectedBoard.Id}");
+        currentTeam = await Http.GetFromJsonAsync<Team>($"team/name/{Board.Name}");
+        users = await Http.GetFromJsonAsync<List<User>>($"usersteams/get-users/team/{currentTeam!.TeamId}");
+        taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{Board.Id}");
     }
 
     private async Task DeleteColumn(Guid columnId)
@@ -160,13 +158,10 @@
     private async Task AddTaskCard()
     {
         var columnId = Columns.First().Id;
-        var newCardIndex = Columns.First().TaskCards != null ? Columns.First().TaskCards.Count : 0;
+        var newCardIndex = Columns.First().TaskCards != null ? Columns.First().TaskCards!.Count : 0;
         newTaskCard.BoardId = SelectedBoard.Id;
-
         var updatedTaskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/AddTaskCard/{newTaskCard.BoardId}/{newTaskCard.Name}/{columnId}/{newCardIndex}");
-
         Columns.First().TaskCards = updatedTaskCards;
-
         newTaskCard = new TaskCard();
     }
 

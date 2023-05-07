@@ -1,12 +1,7 @@
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
-using Microsoft.AspNetCore.ResponseCompression;
 using MudBlazor.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.SqlClient;
-using trello_clone.Server.Services;
 using trello_clone.Shared;
 using trello_clone.Server;
-using trello_clone.Server.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,12 +9,10 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddMudServices();
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
-//builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddSingleton<StateContainer>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();

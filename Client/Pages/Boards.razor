@@ -4,10 +4,10 @@
 @using trello_clone.Shared.Classes
 @using trello_clone.Client.Components
 @using Microsoft.AspNetCore.Components
-@using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject StateContainer StateContainer
+@inject ISnackbar snackbar
 @implements IDisposable
 
 <style>
@@ -24,25 +24,8 @@
 
 <EditForm class="add-board" Model="newBoard" OnValidSubmit="AddBoard">
 	<InputText class="form-control mx-2" @bind-Value="newBoard.Name" />
-
-    <MudButton ButtonType="ButtonType.Submit"  StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Board</MudButton>
+    <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Board</MudButton>
 </EditForm>
-@*<button class="btn btn-primary" type="button" onclick="() => @OpenModal()">show modal</button>*@
-
-@*<MudCard Outlined="true" Style="width: 20%">
-	<MudCardContent>
-		<MudText>Name of board</MudText>
-		<MudText Typo="Typo.body2">Description of board (optional)</MudText>
-	</MudCardContent>
-	<MudCardActions>
-		<MudButton Href="boards/default"
-				   Target="_self"
-				   Variant="Variant.Filled"
-				   Color="Color.Primary">		   
-			Enter
-		</MudButton>
-	</MudCardActions>
-</MudCard>*@
 
 <body>
     @if (boards == null)
@@ -65,13 +48,13 @@
 @code {
     private IEnumerable<Board>? boards;
     private Board newBoard = new Board();
-
+    private List<Team>? teams;
 
     protected override async Task OnInitializedAsync()
     {
         StateContainer.OnChange += StateHasChanged;
-
         await GetBoards();
+        teams = await Http.GetFromJsonAsync<List<Team>>($"team/get-teams");
     }
 
     private async Task GetBoards()
@@ -83,10 +66,20 @@
 
     private async Task AddBoard()
     {
+        foreach(var t in teams!)
+        {
+            if(t.TeamName == newBoard.Name)
+            {
+                snackbar.Add($"A board of the name '{newBoard.Name}' already exists.", Severity.Error);
+                return;
+            }
+        }
         await Http.GetAsync($"Boards/Addboard/{newBoard.Name}");
-
+        Team team = new() { TeamId = Guid.NewGuid(), TeamName = newBoard.Name };
+        await Http.PostAsJsonAsync<Team>($"team/add-team", team);
+        UsersTeams usersTeams = new() { UserId = StateContainer.LoggedInUser!.UserId, TeamId = team.TeamId };
+        await Http.PostAsJsonAsync<UsersTeams>("UsersTeams/add-userteams", usersTeams);
         await GetBoards();
-
         newBoard = new Board();
     }
 

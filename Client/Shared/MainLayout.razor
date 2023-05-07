@@ -4,6 +4,8 @@
 @inject StateContainer stateContainer
 @inject NavigationManager _navigationManager
 @inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject HttpClient http
+@inject ISnackbar snackbar
 <MudThemeProvider/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
@@ -51,6 +53,12 @@
 @code{
     protected override async Task OnInitializedAsync()
     {
+        bool usersExist = await http.GetFromJsonAsync<bool>("user/exist");
+        if(!usersExist)
+        {
+            snackbar.Add("CRITICAL ERROR: There are no users in db!", Severity.Error);
+            return;
+        }
         stateContainer.LoggedInUser = await localStorage.GetItemAsync<User>("login");
         //need to load the board page as well here
     }
