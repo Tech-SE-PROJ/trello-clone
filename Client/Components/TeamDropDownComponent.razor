@@ -1,0 +1,34 @@
+﻿@using Microsoft.AspNetCore.Components
+@using trello_clone.Shared
+@using trello_clone.Shared.Classes
+@using MudBlazor;
+@inject HttpClient Http
+@inject StateContainer stateContainer
+
+<MudMenu Label="Select Team" AnchorOrigin="Origin.BottomCenter">
+    @if (teams is not null)
+    {
+        foreach (Team team in teams!)
+        {
+            <MudMenuItem @onclick="(() => SelectTeam(team))">@team.TeamName</MudMenuItem>
+        }
+    }
+</MudMenu>
+
+@code {
+    //private User[]? users;
+    private List<Team>? teams;
+    private string teamName = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        teams = await Http.GetFromJsonAsync<List<Team>>($"UsersTeams/get-teams/user/{stateContainer.LoggedInUser!.UserId}");
+    }
+
+    protected async Task<Team> SelectTeam(Team team)
+    {
+        teams = await Http.GetFromJsonAsync<List<Team>>($"Team/get-teams/user/{stateContainer.LoggedInUser!.UserId}");
+        //not sure what to do here yet... need to load a new calendar instance theoretically
+        return null; //placeholder
+    }
+}
