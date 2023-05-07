@@ -38,7 +38,7 @@
     <DialogContent>
         <MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
         <MudMenu Label="Assign a user" Variant="Variant.Filled" Color="Color.Primary">
-            @foreach (User user in users!) @*should ONLY get users with the correct teamId for the board!!!!!*@
+            @foreach (User user in users!)
             {
                 <MudMenuItem OnClick="@(() => AssignUserToCard(user.UserId))">@user.UserName</MudMenuItem> 
             }
@@ -53,7 +53,8 @@
 @code {
     [Parameter]
     public TaskCard? taskCard { get; set; }
-    private User[]? users;
+    private List<User>? users;
+    private Team? currentTeam;
     private string? monthDayStr;
     private string? assignedUserName;
     private bool visible = false;
@@ -68,9 +69,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        users = await Http.GetFromJsonAsync<User[]>("user/get-users");
+        currentTeam = await Http.GetFromJsonAsync<Team>($"team/name/{stateContainer.SelectedBoard!.Name}");
+        users = await Http.GetFromJsonAsync<List<User>>($"usersteams/get-users/team/{currentTeam!.TeamId}");
         var taskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/get-task-cards/{stateContainer.SelectedBoard!.Id}");
-        taskCard = taskCards![taskCard!.Index!.Value];
+        taskCard = taskCards!.First(card => card.Name == taskCard!.Name); 
+        //taskCard = taskCards![taskCard!.Index!.Value];
         if (taskCard!.AssignedUserId is not null)
             AssignUserName();
         else
@@ -84,12 +87,11 @@
         await Http.PutAsJsonAsync($"TaskCard/AssignUserToCard/user/{id}", taskCard!.Id);
         taskCard = await Http.GetFromJsonAsync<TaskCard>($"TaskCard/get-task-card/{stateContainer.SelectedBoard!.Id}/{taskCard.Id}");
         AssignUserName(); 
-        //StateHasChanged(); //test
     }
 
     private void AssignUserName()
     {
-        User? foundUser = Array.Find(users!, element => element.UserId == taskCard!.AssignedUserId);
+        User? foundUser = users!.FirstOrDefault<User>(user => user.UserId == taskCard!.AssignedUserId);
         assignedUserName = foundUser!.UserName;
     }
 
