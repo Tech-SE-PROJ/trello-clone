@@ -50,7 +50,7 @@
 
         <EditForm class="add-taskcard" Model="newTaskCard" OnValidSubmit="AddTaskCard">
             <InputText class="form-control mx-2" @bind-Value="newTaskCard.Name" />
-            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Work Item</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2" Variant="Variant.Outlined" Color="Color.Primary">Add Work Item</MudButton>
         </EditForm>
         <br />
         <div class="column-section">
@@ -70,32 +70,29 @@
     }
 
 </div>
-<div class="user-list">
-    <MudGrid Spacing="4" Justify="Justify.Center">
-        <MudItem xs="12">
-            <MudPaper Class="d-flex align-center justify-center py-8" Outlined>
-                <MudText Align="Align.Center" Typo="Typo.h3">Team Members</MudText>
-            </MudPaper>
-        </MudItem>
-        @if (users is not null)
-        {
-            @foreach (User user in users!)
-            {
-                <MudItem>
-                    <MudPaper Height="40px" Width="140px" Class="d-flex align-center justify-center mud-width-full py-8" Outlined>@user.UserName</MudPaper>
-                </MudItem>
-            }
-        }
-    </MudGrid>
-</div>
 
 <MudDialog @bind-IsVisible="visible" Options="dialogOptions">
     <DialogContent>
         <MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
         <EditForm class="add-taskcard" Model="newColumn" OnValidSubmit="AddColumn">
             <InputText class="form-control mx-2" @bind-Value="newColumn.Name" />
-            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Column</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2" Variant="Variant.Outlined" Color="Color.Primary">Add Column</MudButton>
         </EditForm>
+        <br/>
+        <MudGrid Spacing="4" Justify="Justify.Center">
+            <MudItem xs="12">
+                 <MudText Align="Align.Center" Typo="Typo.h4">Team Members</MudText>
+            </MudItem>
+            @if (users is not null)
+            {
+                @foreach (User user in users!)
+                {
+                    <MudItem>
+                        <MudPaper Height="40px" Width="140px" Class="d-flex align-center justify-center mud-width-full py-8" Outlined>@user.UserName</MudPaper>
+                    </MudItem>
+                }
+            }
+        </MudGrid>
     </DialogContent>
     <DialogActions>
     </DialogActions>
