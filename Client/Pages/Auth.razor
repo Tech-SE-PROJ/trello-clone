@@ -42,6 +42,7 @@
         </MudPaper>
     </MudItem>
 </MudGrid>
+<br />
 <div class="d-flex flex-column align-center">
     @if (stateContainer.LoggedInUser is not null)
     {
@@ -80,6 +81,7 @@
         <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddNewTeam" Class="px-10">Save</MudButton>
     </DialogActions>
 </MudDialog>
+
 @code {
     bool success = false;
     bool checkmark = true;
