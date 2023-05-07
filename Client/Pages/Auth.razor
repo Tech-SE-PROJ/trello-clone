@@ -196,7 +196,7 @@
                 stateContainer.LoggedInUser = user;
                 await localStorage.SetItemAsync<User>("login", user);
                 stateContainer.LoggedInUser = await localStorage.GetItemAsync<User>("login");
-                _navigationManager.NavigateTo("/");
+                _navigationManager.NavigateTo("/Auth");
                 return;
             }
         }
