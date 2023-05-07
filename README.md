@@ -29,10 +29,10 @@
 
 ~~15. Shall/Will be able to Delete boards.~~
 
-16. Will have different categories for cards/events. - **if time permits, just need a category model**
+16. Will have different categories for cards/events.
 
 ~~17. Will use Git or Azure/Devops to keep track of project~~
 
 ~~18. Will attempt to utilize sprints.~~
 
-19. Will have email notifications of some kind (alerts) on possible events. - **probably won't be possible in time**
+19. Will have email notifications of some kind (alerts) on possible events.
