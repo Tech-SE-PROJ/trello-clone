@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using trello_clone.Server.Controllers;
 using trello_clone.Shared.Classes;
 
 namespace trello_clone.Server
