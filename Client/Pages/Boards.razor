@@ -37,8 +37,7 @@
         @foreach (var board in boards)
         {
             <div>
-                <p @onclick="() => BoardClicked(board)" >@board.Name</p>
-                
+                <p @onclick="() => BoardClicked(board)">@board.Name</p>
             </div>
         }
     }

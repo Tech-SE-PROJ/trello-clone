@@ -77,11 +77,14 @@
                 <MudText Align="Align.Center" Typo="Typo.h3">Team Members</MudText>
             </MudPaper>
         </MudItem>
-        @foreach (User user in users!)
+        @if (users is not null)
         {
-            <MudItem>
-                <MudPaper Height="40px" Width="140px" Class="d-flex align-center justify-center mud-width-full py-8" Outlined>@user.UserName</MudPaper>
-            </MudItem>
+            @foreach (User user in users!)
+            {
+                <MudItem>
+                    <MudPaper Height="40px" Width="140px" Class="d-flex align-center justify-center mud-width-full py-8" Outlined>@user.UserName</MudPaper>
+                </MudItem>
+            }
         }
     </MudGrid>
 </div>
@@ -106,7 +109,7 @@
     
     private Board SelectedBoard => StateContainer.SelectedBoard;
 
-    private User[]? users;
+    private List<User>? users;
 
     public List<Column> Columns => SelectedBoard.Columns ?? new List<Column>();
 
@@ -139,9 +142,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        currentTeam = await Http.GetFromJsonAsync<Team>($"team/name/{Board.Name}");
+        currentTeam = await Http.GetFromJsonAsync<Team>($"team/name/{SelectedBoard.Name}");
         users = await Http.GetFromJsonAsync<List<User>>($"usersteams/get-users/team/{currentTeam!.TeamId}");
-        taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{Board.Id}");
+        taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{SelectedBoard.Id}");
     }
 
     private async Task DeleteColumn(Guid columnId)
