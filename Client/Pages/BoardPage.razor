@@ -34,18 +34,19 @@
     .add-taskcard {
         display: flex;
         flex-direction: row;
-        width: 33%;
+        min-width: 33%;
+        width: fit-content;
     }
 </style>
 
 <div class="board-container">
-    @if (Board == null)
+    @if (SelectedBoard == null)
     {
         <p>... Loading</p>
     }
     else
     {
-        <h1>@Board.Name</h1>
+        <h1>@SelectedBoard.Name <MudIconButton Icon="@Icons.Material.Filled.MoreHoriz" @onclick="OpenCardSettings"></MudIconButton></h1>
 
         <EditForm class="add-taskcard" Model="newTaskCard" OnValidSubmit="AddTaskCard">
             <InputText class="form-control mx-2" @bind-Value="newTaskCard.Name" />
@@ -55,7 +56,15 @@
         <div class="column-section">
             @foreach (var column in Columns)
             {
-                <ColumnComponent Column="@column" />
+                <ColumnComponent Column="@column" 
+                    OnDeleteColumn="DeleteColumn"
+                    OnCardDragStart="OnCardDragStart" 
+                    OnCardDragEnd="OnCardDragEnd" 
+                    OnDragEnterColumn="OnCardDragEnterColumn"
+                    OnCardDragEnter="OnCardDragEnter" 
+                    OnCardDragEnterBottom="OnCardDragEnterBottom" 
+                    OnCardDropBottom="OnCardDropBottom" 
+                    OnCardDropOver="OnCardDropOver"/>
             }
         </div>
     }
@@ -76,17 +85,52 @@
         }
     </MudGrid>
 </div>
+
+<MudDialog @bind-IsVisible="visible" Options="dialogOptions">
+    <DialogContent>
+        <MudText Align="Align.Center" Typo="Typo.h4">Settings</MudText>
+        <EditForm class="add-taskcard" Model="newColumn" OnValidSubmit="AddColumn">
+            <InputText class="form-control mx-2" @bind-Value="newColumn.Name" />
+            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.Add" FullWidth="true" Class="rounded-lg py-2">Add Column</MudButton>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter]
     public string? boardName { get; set; }
-
-    private Board Board => StateContainer.SelectedBoard;
-    private List<User>? users = new();
-    private List<Column> Columns => Board.Columns;
+    
     private Team? currentTeam;
+    
+    private Board SelectedBoard => StateContainer.SelectedBoard;
+
+    private User[]? users;
+
+    public List<Column> Columns => SelectedBoard.Columns ?? new List<Column>();
+
+    private Column newColumn = new Column();
+
     private TaskCard newTaskCard = new TaskCard();
 
     private List<TaskCard>? taskCards;
+
+    private TaskCard? DraggedCard;
+
+    private TaskCard? DragEnter;
+
+    private int DraggedItemIndex;
+
+    private Guid? initialColumnId;
+
+    private Guid? finalColumnId;
+
+    private bool visible = false;
+
+    DialogOptions dialogOptions = new() { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+    protected void OpenCardSettings() => visible = true;
 
     protected override void OnInitialized()
     {
@@ -100,18 +144,118 @@
         taskCards = await Http.GetFromJsonAsync<List<TaskCard>?>($"taskcard/get-task-cards/{Board.Id}");
     }
 
+    private async Task DeleteColumn(Guid columnId)
+    {
+        await Http.GetAsync($"column/DeleteColumn/{columnId}");
+
+        var columnToRemove = SelectedBoard.Columns.FirstOrDefault(column => column.Id == columnId);
+
+        SelectedBoard.Columns.Remove(columnToRemove);
+
+        Task.Run(() => SaveChanges());
+    }
+
     private async Task AddTaskCard()
     {
         var columnId = Columns.First().Id;
         var newCardIndex = Columns.First().TaskCards != null ? Columns.First().TaskCards!.Count : 0;
-        newTaskCard.BoardId = Board.Id;
-        taskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/AddTaskCard/{newTaskCard.BoardId}/{newTaskCard.Name}/{columnId}/{newCardIndex}");
-        Columns.First().TaskCards = taskCards;
+        newTaskCard.BoardId = SelectedBoard.Id;
+        var updatedTaskCards = await Http.GetFromJsonAsync<List<TaskCard>>($"taskcard/AddTaskCard/{newTaskCard.BoardId}/{newTaskCard.Name}/{columnId}/{newCardIndex}");
+        Columns.First().TaskCards = updatedTaskCards;
         newTaskCard = new TaskCard();
+    }
+
+    private async Task AddColumn()
+    {
+        var columnIndex = Columns.Count;
+
+        var updatedColumn = await Http.GetFromJsonAsync<Column>($"column/AddColumn/{SelectedBoard.Id}/{newColumn.Name}/{columnIndex}");
+
+        SelectedBoard.Columns.Add(updatedColumn);
+
+        visible = false;
+
+        newColumn = new Column();
+    }
+
+    #region DragDrop
+
+    public void OnCardDragEnterColumn(Guid columnId)
+    {
+        finalColumnId = columnId;
+    }
+
+    public void OnCardDragStart(TaskCard taskCard)
+    {
+        DraggedCard = taskCard;
+        initialColumnId = taskCard.ColumnId;
+        DraggedItemIndex = Columns.FirstOrDefault(col => col.Id == initialColumnId).TaskCards.IndexOf(taskCard);
+    }
+
+    public void OnCardDragEnd()
+    {
+        if (DraggedCard == null) return;
+
+        DraggedCard.ColumnId = finalColumnId;
+
+        Columns.FirstOrDefault(col => col.Id == initialColumnId)?.TaskCards?.Remove(DraggedCard);
+
+        if (finalColumnId != initialColumnId) Columns.FirstOrDefault(col => col.Id == finalColumnId)?.TaskCards?.Add(DraggedCard);
+        else Columns.FirstOrDefault(col => col.Id == finalColumnId)?.TaskCards?.Insert(DraggedItemIndex, DraggedCard);
+
+        DragEnter = null;
+
+        Task.Run(() => SaveChanges());
+    }
+
+    public void OnCardDropOver(TaskCard cardDroppedOn)
+    {
+        DragEnter = null;
+        if (DraggedCard == null) return;
+        if (DraggedCard == cardDroppedOn) return;
+
+        DraggedCard.ColumnId = finalColumnId;
+        Columns.FirstOrDefault(col => col.Id == initialColumnId)?.TaskCards?.Remove(DraggedCard);
+        var cardDroppedOnIndex = Columns.FirstOrDefault(col => col.Id == finalColumnId).TaskCards.IndexOf(cardDroppedOn);
+        Columns.FirstOrDefault(col => col.Id == finalColumnId)?.TaskCards?.Insert(cardDroppedOnIndex, DraggedCard);
+        DraggedCard = null;
+
+        Task.Run(() => SaveChanges());
+    }
+
+    public void OnCardDropBottom()
+    {
+        DragEnter = null;
+        if (DraggedCard == null) return;
+
+        DraggedCard.ColumnId = finalColumnId;
+        Columns.FirstOrDefault(col => col.Id == initialColumnId).TaskCards.Remove(DraggedCard);
+        Columns.FirstOrDefault(col => col.Id == finalColumnId).TaskCards.Add(DraggedCard);
+        DraggedCard = null;
+
+        Task.Run(() => SaveChanges());
+    }
+
+    public void OnCardDragEnter(TaskCard enteredCard)
+    {
+        DragEnter = enteredCard;
+    }
+
+    public void OnCardDragEnterBottom()
+    {
+        DragEnter = null;
+    }
+
+    #endregion
+
+    public async Task SaveChanges()
+    {
+        var response = await Http.PostAsJsonAsync<Board>($"boards/UpdateBoard", SelectedBoard);
     }
 
     public void Dispose()
     {
+        Task.Run(() => SaveChanges());
         StateContainer.OnChange -= StateHasChanged;
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using trello_clone.Server.Interfaces;
 using trello_clone.Server.Services;
+using trello_clone.Shared;
 using trello_clone.Shared.Classes;
 
 namespace trello_clone.Server.Controllers
@@ -30,6 +31,16 @@ namespace trello_clone.Server.Controllers
         {
             _boardService.AddBoard(boardName);
             return boards;
+        }
+
+        [HttpPost("UpdateBoard")]
+        public Board UpdateBoard([FromBody] Board board)
+        {
+            _boardService.UpdateBoard(board);
+
+            var updatedBoard = _boardService.GetBoard(board.Id);
+
+            return updatedBoard;
         }
     }
 }
